@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Quotation</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; }
+  h1,h2,h3 { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #000; padding: 6px; }
+  .no-border td { border: none; }
+  .right { text-align: right; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+
+<h3>7 STAR INTERNATIONAL EVENTS L.L.C</h3>
+<p>P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+SAIH SHUBAIB 3<br>
+DUBAI - UAE</p>
+
+<h2 class="center">Quotation</h2>
+
+<table class="no-border">
+<tr><td>CLIENT:</td><td>{{CLIENT_NAME}}</td></tr>
+<tr><td>Element:</td><td>{{ELEMENT}}</td></tr>
+<tr><td>Quotation Date:</td><td>{{QUOTATION_DATE}}</td></tr>
+<tr><td>Quotation Number:</td><td>{{QUOTATION_NO}}</td></tr>
+<tr><td>VAT TRN:</td><td>104038790200003</td></tr>
+</table>
+
+<br>
+
+<table>
+<thead>
+<tr>
+<th>S.No</th><th>Description</th><th>Size</th>
+<th>Quantity</th><th>Rate AED</th><th>Amount AED</th>
+</tr>
+</thead>
+<tbody>
+{{QUOTATION_ROWS}}
+</tbody>
+</table>
+
+<table>
+<tr><td class="right">Net Amount (AED)</td><td class="right">{{NET_AMOUNT}}</td></tr>
+<tr><td class="right">5% VAT</td><td class="right">{{VAT}}</td></tr>
+<tr><td class="right"><strong>Total</strong></td><td class="right"><strong>{{TOTAL}}</strong></td></tr>
+</table>
+
+<h4>Terms & Conditions</h4>
+<ul>
+<li>Any change in drawings before fabrication only</li>
+<li>Size changes affect cost</li>
+<li>NOC & approvals charged extra</li>
+<li>50% advance, 50% on completion</li>
+<li>Payment via bank transfer or cheque only</li>
+</ul>
+
+<p>
+<strong>Bank Details:</strong><br>
+ADCB BANK<br>
+Account: 7Star International Events LLC SHJ BR<br>
+IBAN: AE020030012980065820001<br>
+Swift: ADCBAEAA
+</p>
+
+<p class="center">
+Approved by: Shaji Mohammed Khan<br>
+Signature: ___________________
+</p>
+
+</body>
+</html>
