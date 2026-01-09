@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Plus, Search, Calendar as CalendarIcon, List, ChevronLeft, ChevronRight, Edit, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, useApproveEvent, Event } from '@/hooks/useEvents';
 import { useClients } from '@/hooks/useClients';
@@ -9,12 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO, startOfWeek, endOfWeek } from 'date-fns';
+import { EventFormFields } from '@/components/events/EventFormFields';
+import { EventControlCenter } from '@/components/events/EventControlCenter';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-500',
@@ -33,10 +31,14 @@ export default function Events() {
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
   
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar'); // Calendar first!
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
+  
+  // Form state - kept at this level but with stable update function
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -53,7 +55,7 @@ export default function Events() {
     event.clients?.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       title: '',
       description: '',
@@ -65,7 +67,12 @@ export default function Events() {
       region: userRole?.region || 'UAE',
     });
     setEditingEvent(null);
-  };
+  }, [userRole?.region]);
+
+  // Stable field change handler to prevent re-renders
+  const handleFieldChange = useCallback((field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +91,7 @@ export default function Events() {
     resetForm();
   };
 
-  const handleEdit = (event: Event) => {
+  const handleEdit = useCallback((event: Event) => {
     setEditingEvent(event);
     setFormData({
       title: event.title,
@@ -96,114 +103,61 @@ export default function Events() {
       staff_count: event.staff_count || 0,
       region: event.region,
     });
-  };
+    setIsControlCenterOpen(false);
+  }, []);
+
+  const handleEventClick = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setIsControlCenterOpen(true);
+  }, []);
 
   const canManage = hasPermission('canManageEvents');
 
-  // Calendar logic
+  // Calendar logic with proper padding
   const calendarDays = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    return eachDayOfInterval({ start, end });
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const calendarStart = startOfWeek(monthStart);
+    const calendarEnd = endOfWeek(monthEnd);
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentMonth]);
 
-  const getEventsForDay = (day: Date) => {
+  const getEventsForDay = useCallback((day: Date) => {
     return events?.filter(event => {
       const eventDate = parseISO(event.event_date);
       return isSameDay(eventDate, day);
     }) || [];
-  };
+  }, [events]);
 
-  const FormFields = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Event Title *</Label>
-          <Input
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
-          />
+  // Mobile event card for list view
+  const EventCard = ({ event }: { event: Event }) => (
+    <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleEventClick(event)}>
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-medium">{event.title}</p>
+          <p className="text-sm text-muted-foreground">{event.clients?.name}</p>
         </div>
-        <div className="space-y-2">
-          <Label>Client *</Label>
-          <Select
-            value={formData.client_id}
-            onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients?.map(client => (
-                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Event Date *</Label>
-          <Input
-            type="date"
-            value={formData.event_date}
-            onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>End Date</Label>
-          <Input
-            type="date"
-            value={formData.event_end_date}
-            onChange={(e) => setFormData({ ...formData, event_end_date: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Location</Label>
-          <Input
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Staff Count</Label>
-          <Input
-            type="number"
-            value={formData.staff_count}
-            onChange={(e) => setFormData({ ...formData, staff_count: parseInt(e.target.value) || 0 })}
-          />
-        </div>
-        {isSuperAdmin && (
-          <div className="space-y-2">
-            <Label>Region</Label>
-            <Select
-              value={formData.region}
-              onValueChange={(value) => setFormData({ ...formData, region: value as any })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="UAE">UAE</SelectItem>
-                <SelectItem value="SAUDI">Saudi Arabia</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <Badge className={`${statusColors[event.status]} text-white`}>
+          {event.status}
+        </Badge>
       </div>
-      <div className="space-y-2">
-        <Label>Description</Label>
-        <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        />
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <p className="text-muted-foreground">Date</p>
+          <p>{format(parseISO(event.event_date), 'MMM d, yyyy')}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Location</p>
+          <p>{event.location || '-'}</p>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Events Calendar</h1>
           <p className="text-muted-foreground">Manage and track all events</p>
@@ -211,36 +165,42 @@ export default function Events() {
         <div className="flex gap-2">
           <div className="flex border rounded-lg">
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="rounded-r-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
               variant={viewMode === 'calendar' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('calendar')}
-              className="rounded-l-none"
+              className="rounded-r-none"
             >
               <CalendarIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
             </Button>
           </div>
           {canManage && (
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" /> Add Event
+                <Button onClick={resetForm} size="sm" className="sm:size-default">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Event</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create New Event</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <FormFields />
-                  <div className="flex justify-end gap-2">
+                  <EventFormFields
+                    formData={formData}
+                    onFieldChange={handleFieldChange}
+                    clients={clients}
+                    isSuperAdmin={isSuperAdmin}
+                  />
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                       Cancel
                     </Button>
@@ -255,9 +215,10 @@ export default function Events() {
         </div>
       </div>
 
-      {viewMode === 'calendar' ? (
+      {/* Calendar View - Primary */}
+      {viewMode === 'calendar' && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                 <ChevronLeft className="h-4 w-4" />
@@ -268,38 +229,47 @@ export default function Events() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-1">
+          <CardContent className="p-2 sm:p-6">
+            {/* Day headers */}
+            <div className="grid grid-cols-7 gap-1 mb-1">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center font-medium text-muted-foreground py-2">
-                  {day}
+                <div key={day} className="text-center font-medium text-muted-foreground py-2 text-xs sm:text-sm">
+                  <span className="hidden sm:inline">{day}</span>
+                  <span className="sm:hidden">{day.charAt(0)}</span>
                 </div>
               ))}
+            </div>
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, i) => {
                 const dayEvents = getEventsForDay(day);
                 const isToday = isSameDay(day, new Date());
+                const isCurrentMonth = isSameMonth(day, currentMonth);
                 return (
                   <div
                     key={i}
-                    className={`min-h-[100px] border rounded-lg p-1 ${
+                    className={`min-h-[60px] sm:min-h-[100px] border rounded-lg p-1 transition-colors ${
                       isToday ? 'bg-primary/10 border-primary' : ''
-                    } ${!isSameMonth(day, currentMonth) ? 'opacity-50' : ''}`}
+                    } ${!isCurrentMonth ? 'opacity-40 bg-muted/30' : 'hover:bg-muted/50'}`}
                   >
-                    <div className={`text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
+                    <div className={`text-xs sm:text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
                       {format(day, 'd')}
                     </div>
-                    <div className="space-y-1 mt-1">
+                    <div className="space-y-0.5 mt-0.5">
                       {dayEvents.slice(0, 2).map(event => (
                         <div
                           key={event.id}
-                          className={`text-xs p-1 rounded truncate text-white ${statusColors[event.status]}`}
+                          onClick={() => handleEventClick(event)}
+                          className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded truncate text-white cursor-pointer hover:opacity-80 transition-opacity ${statusColors[event.status]}`}
                           title={`${event.title} - ${event.clients?.name}`}
                         >
                           {event.title}
                         </div>
                       ))}
                       {dayEvents.length > 2 && (
-                        <div className="text-xs text-muted-foreground">+{dayEvents.length - 2} more</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">
+                          +{dayEvents.length - 2} more
+                        </div>
                       )}
                     </div>
                   </div>
@@ -308,11 +278,14 @@ export default function Events() {
             </div>
           </CardContent>
         </Card>
-      ) : (
+      )}
+
+      {/* List View - Secondary */}
+      {viewMode === 'list' && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search events..."
@@ -332,134 +305,167 @@ export default function Events() {
                 <p>No events found</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Region</TableHead>
-                    {canManage && <TableHead className="w-[150px]">Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile card view */}
+                <div className="space-y-4 sm:hidden">
                   {filteredEvents?.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <div className="font-medium">{event.title}</div>
-                        {event.description && (
-                          <div className="text-xs text-muted-foreground line-clamp-1">{event.description}</div>
-                        )}
-                      </TableCell>
-                      <TableCell>{event.clients?.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                          {format(parseISO(event.event_date), 'MMM d, yyyy')}
-                        </div>
-                      </TableCell>
-                      <TableCell>{event.location || '-'}</TableCell>
-                      <TableCell>
-                        <Badge className={`${statusColors[event.status]} text-white`}>
-                          {event.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{event.region}</Badge>
-                      </TableCell>
-                      {canManage && (
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {event.status === 'pending' && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => approveEvent.mutate({ id: event.id, status: 'approved' })}
-                                  title="Approve"
-                                >
-                                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => approveEvent.mutate({ id: event.id, status: 'rejected' })}
-                                  title="Reject"
-                                >
-                                  <XCircle className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </>
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+
+                {/* Desktop table view */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Event</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Region</TableHead>
+                        {canManage && <TableHead className="w-[150px]">Actions</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEvents?.map((event) => (
+                        <TableRow 
+                          key={event.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleEventClick(event)}
+                        >
+                          <TableCell>
+                            <div className="font-medium">{event.title}</div>
+                            {event.description && (
+                              <div className="text-xs text-muted-foreground line-clamp-1">{event.description}</div>
                             )}
-                            {event.status === 'approved' && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => approveEvent.mutate({ id: event.id, status: 'completed' })}
-                                title="Mark Completed"
-                              >
-                                <Clock className="h-4 w-4 text-blue-500" />
-                              </Button>
-                            )}
-                            <Dialog open={editingEvent?.id === event.id} onOpenChange={(open) => !open && setEditingEvent(null)}>
-                              <DialogTrigger asChild>
+                          </TableCell>
+                          <TableCell>{event.clients?.name}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                              {format(parseISO(event.event_date), 'MMM d, yyyy')}
+                            </div>
+                          </TableCell>
+                          <TableCell>{event.location || '-'}</TableCell>
+                          <TableCell>
+                            <Badge className={`${statusColors[event.status]} text-white`}>
+                              {event.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{event.region}</Badge>
+                          </TableCell>
+                          {canManage && (
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <div className="flex gap-1">
+                                {event.status === 'pending' && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => approveEvent.mutate({ id: event.id, status: 'approved' })}
+                                      title="Approve"
+                                    >
+                                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => approveEvent.mutate({ id: event.id, status: 'rejected' })}
+                                      title="Reject"
+                                    >
+                                      <XCircle className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </>
+                                )}
+                                {event.status === 'approved' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => approveEvent.mutate({ id: event.id, status: 'completed' })}
+                                    title="Mark Completed"
+                                  >
+                                    <Clock className="h-4 w-4 text-blue-500" />
+                                  </Button>
+                                )}
                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(event)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                  <DialogTitle>Edit Event</DialogTitle>
-                                </DialogHeader>
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                  <FormFields />
-                                  <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
-                                      Cancel
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
-                                    <Button type="submit" disabled={updateEvent.isPending}>
-                                      {updateEvent.isPending ? 'Saving...' : 'Save Changes'}
-                                    </Button>
-                                  </div>
-                                </form>
-                              </DialogContent>
-                            </Dialog>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Event</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{event.title}"? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteEvent.mutate(event.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteEvent.mutate(event.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Event Dialog */}
+      <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Event</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <EventFormFields
+              formData={formData}
+              onFieldChange={handleFieldChange}
+              clients={clients}
+              isSuperAdmin={isSuperAdmin}
+            />
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateEvent.isPending}>
+                {updateEvent.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event Control Center (Side Panel) */}
+      <EventControlCenter
+        event={selectedEvent}
+        isOpen={isControlCenterOpen}
+        onClose={() => {
+          setIsControlCenterOpen(false);
+          setSelectedEvent(null);
+        }}
+        onEdit={handleEdit}
+        canManage={canManage}
+      />
     </div>
   );
 }
