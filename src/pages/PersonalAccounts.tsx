@@ -85,9 +85,46 @@ export default function PersonalAccounts() {
     });
   };
 
+  // Mobile card component
+  const AccountCard = ({ account }: { account: PersonalAccount }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1">
+          <p className="font-medium">{account.description}</p>
+          {account.remarks && <p className="text-xs text-muted-foreground">{account.remarks}</p>}
+        </div>
+        <Badge variant="outline">{account.mode_of_payment?.replace('_', ' ') || '-'}</Badge>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Date</p>
+          <p>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Credit</p>
+          <p className="text-emerald-600 font-medium">{(account.credit || 0) > 0 ? `+${account.credit?.toFixed(2)}` : '-'}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Debit</p>
+          <p className="text-red-600 font-medium">{(account.debit || 0) > 0 ? `-${account.debit?.toFixed(2)}` : '-'}</p>
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end border-t pt-3">
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}><Edit className="h-4 w-4" /></Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild><Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Delete Entry</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete this entry?</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteAccount.mutate(account.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </Card>
+  );
+
   const FormFields = () => (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Entry Date *</Label>
           <Input
@@ -160,21 +197,21 @@ export default function PersonalAccounts() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Personal Accounts</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Personal Accounts</h1>
             <Badge variant="outline" className="gap-1">
               <Lock className="h-3 w-3" /> Private
             </Badge>
           </div>
-          <p className="text-muted-foreground">7 Star Account Statement - Super Admin Only</p>
+          <p className="text-sm text-muted-foreground">7 Star Account Statement - Super Admin Only</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="mr-2 h-4 w-4" /> Add Entry
+            <Button onClick={resetForm} size="sm" className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 sm:mr-2" /> <span className="sm:inline">Add Entry</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -183,7 +220,7 @@ export default function PersonalAccounts() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <FormFields />
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                   Cancel
                 </Button>
@@ -249,36 +286,43 @@ export default function PersonalAccounts() {
               <p>No personal account entries found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Credit</TableHead>
-                  <TableHead>Debit</TableHead>
-                  <TableHead>Payment Mode</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAccounts?.map((account) => (
-                  <TableRow key={account.id}>
-                    <TableCell>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>
-                      <div className="font-medium">{account.description}</div>
-                      {account.remarks && (
-                        <div className="text-xs text-muted-foreground">{account.remarks}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-emerald-600 font-medium">
-                      {(account.credit || 0) > 0 ? `+${account.credit?.toFixed(2)}` : '-'}
-                    </TableCell>
-                    <TableCell className="text-red-600 font-medium">
-                      {(account.debit || 0) > 0 ? `-${account.debit?.toFixed(2)}` : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{account.mode_of_payment?.replace('_', ' ') || '-'}</Badge>
-                    </TableCell>
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
+                {filteredAccounts?.map((account) => <AccountCard key={account.id} account={account} />)}
+              </div>
+              {/* Desktop table view */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Credit</TableHead>
+                      <TableHead>Debit</TableHead>
+                      <TableHead>Payment Mode</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAccounts?.map((account) => (
+                      <TableRow key={account.id}>
+                        <TableCell>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{account.description}</div>
+                          {account.remarks && (
+                            <div className="text-xs text-muted-foreground">{account.remarks}</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-emerald-600 font-medium">
+                          {(account.credit || 0) > 0 ? `+${account.credit?.toFixed(2)}` : '-'}
+                        </TableCell>
+                        <TableCell className="text-red-600 font-medium">
+                          {(account.debit || 0) > 0 ? `-${account.debit?.toFixed(2)}` : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{account.mode_of_payment?.replace('_', ' ') || '-'}</Badge>
+                        </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Dialog open={editingAccount?.id === account.id} onOpenChange={(open) => !open && setEditingAccount(null)}>
@@ -331,9 +375,11 @@ export default function PersonalAccounts() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
