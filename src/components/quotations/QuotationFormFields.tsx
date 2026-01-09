@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ClientCombobox } from '@/components/ClientCombobox';
 import { Client } from '@/hooks/useClients';
+import { getCurrencyCode } from '@/lib/currency';
 
 interface QuotationItem {
   serial_no: number;
@@ -247,9 +248,9 @@ export function QuotationFormFields({
 
       <div className="flex justify-end">
         <div className="text-right space-y-1">
-          <div>Net Amount: <span className="font-medium">{totals.netAmount.toFixed(2)} AED</span></div>
-          <div>VAT (5%): <span className="font-medium">{totals.vatAmount.toFixed(2)} AED</span></div>
-          <div className="text-lg">Total: <span className="font-bold">{totals.totalAmount.toFixed(2)} AED</span></div>
+          <div>Net Amount: <span className="font-medium">{totals.netAmount.toFixed(2)} {getCurrencyCode(formData.region)}</span></div>
+          <div>VAT (5%): <span className="font-medium">{totals.vatAmount.toFixed(2)} {getCurrencyCode(formData.region)}</span></div>
+          <div className="text-lg">Total: <span className="font-bold">{totals.totalAmount.toFixed(2)} {getCurrencyCode(formData.region)}</span></div>
         </div>
       </div>
 

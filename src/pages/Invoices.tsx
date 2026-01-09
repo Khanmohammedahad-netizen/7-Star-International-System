@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Receipt, Download, FileSpreadsheet } from 'lucide-react';
 import { useInvoices, useCreateInvoice, useUpdateInvoice, useDeleteInvoice, Invoice } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { InvoiceFormFields } from '@/components/invoices/InvoiceFormFields';
 import { format, parseISO, subMonths } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrencyCode } from '@/lib/currency';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-secondary text-secondary-foreground',
@@ -97,6 +98,7 @@ export default function Invoices() {
   }, []);
 
   const generateInvoiceNumber = useCallback(async () => {
+    if (isGeneratingNumber) return;
     setIsGeneratingNumber(true);
     try {
       const region = formData.region as 'UAE' | 'SAUDI';
@@ -108,7 +110,14 @@ export default function Invoices() {
     } finally {
       setIsGeneratingNumber(false);
     }
-  }, [formData.region]);
+  }, [formData.region, isGeneratingNumber]);
+
+  // Auto-generate invoice number when opening create dialog
+  useEffect(() => {
+    if (isCreateOpen && !formData.invoice_number && !isGeneratingNumber) {
+      generateInvoiceNumber();
+    }
+  }, [isCreateOpen, formData.invoice_number, isGeneratingNumber, generateInvoiceNumber]);
 
   const resetForm = useCallback(() => {
     setFormData({
@@ -185,9 +194,9 @@ export default function Invoices() {
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm mb-3">
         <div><p className="text-muted-foreground">Date</p><p>{format(parseISO(invoice.invoice_date), 'MMM d, yyyy')}</p></div>
-        <div><p className="text-muted-foreground">Total</p><p className="font-medium">{invoice.total_amount.toFixed(2)} AED</p></div>
-        <div><p className="text-muted-foreground">Paid</p><p>{invoice.amount_paid.toFixed(2)} AED</p></div>
-        <div><p className="text-muted-foreground">Balance</p><p className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>{(invoice.balance || 0).toFixed(2)} AED</p></div>
+        <div><p className="text-muted-foreground">Total</p><p className="font-medium">{invoice.total_amount.toFixed(2)} {getCurrencyCode(invoice.region)}</p></div>
+        <div><p className="text-muted-foreground">Paid</p><p>{invoice.amount_paid.toFixed(2)} {getCurrencyCode(invoice.region)}</p></div>
+        <div><p className="text-muted-foreground">Balance</p><p className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>{(invoice.balance || 0).toFixed(2)} {getCurrencyCode(invoice.region)}</p></div>
       </div>
       <div className="flex gap-2 justify-end border-t pt-3">
         <Button variant="ghost" size="sm" onClick={() => downloadPdf({ type: 'invoice', id: invoice.id, filename: `Invoice-${invoice.invoice_number}.pdf` })} disabled={isPdfLoading}><Download className="h-4 w-4" /></Button>
@@ -258,9 +267,9 @@ export default function Invoices() {
                         <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
                         <TableCell>{invoice.clients?.name}</TableCell>
                         <TableCell>{format(parseISO(invoice.invoice_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>{invoice.total_amount.toFixed(2)} AED</TableCell>
-                        <TableCell>{invoice.amount_paid.toFixed(2)} AED</TableCell>
-                        <TableCell className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>{(invoice.balance || 0).toFixed(2)} AED</TableCell>
+                        <TableCell>{invoice.total_amount.toFixed(2)} {getCurrencyCode(invoice.region)}</TableCell>
+                        <TableCell>{invoice.amount_paid.toFixed(2)} {getCurrencyCode(invoice.region)}</TableCell>
+                        <TableCell className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>{(invoice.balance || 0).toFixed(2)} {getCurrencyCode(invoice.region)}</TableCell>
                         <TableCell><Badge className={statusColors[invoice.status]}>{invoice.status}</Badge></TableCell>
                         <TableCell>
                           <div className="flex gap-1">
