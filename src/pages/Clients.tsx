@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Building2, FileSpreadsheet } from 'lucide-react';
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient, Client } from '@/hooks/useClients';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePdfDownload } from '@/hooks/usePdfDownload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { format, subMonths } from 'date-fns';
 
 export default function Clients() {
   const { data: clients, isLoading } = useClients();
@@ -19,6 +21,10 @@ export default function Clients() {
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
+  const { downloadPdf, isLoading: isPdfLoading } = usePdfDownload();
+  const [ledgerClient, setLedgerClient] = useState<Client | null>(null);
+  const [ledgerFromDate, setLedgerFromDate] = useState(format(subMonths(new Date(), 3), 'yyyy-MM-dd'));
+  const [ledgerToDate, setLedgerToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -212,7 +218,7 @@ export default function Clients() {
                   <TableHead>Representative</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Region</TableHead>
-                  {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
+                  <TableHead className="w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -232,127 +238,183 @@ export default function Clients() {
                     <TableCell>
                       <Badge variant="outline">{client.region}</Badge>
                     </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Dialog open={editingClient?.id === client.id} onOpenChange={(open) => !open && setEditingClient(null)}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(client)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Edit Client</DialogTitle>
-                              </DialogHeader>
-                              <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-name">Client Name *</Label>
-                                    <Input
-                                      id="edit-name"
-                                      value={formData.name}
-                                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                      required
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-company_name">Company Name</Label>
-                                    <Input
-                                      id="edit-company_name"
-                                      value={formData.company_name}
-                                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-representative_name">Representative Name</Label>
-                                    <Input
-                                      id="edit-representative_name"
-                                      value={formData.representative_name}
-                                      onChange={(e) => setFormData({ ...formData, representative_name: e.target.value })}
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-representative_phone">Representative Phone</Label>
-                                    <Input
-                                      id="edit-representative_phone"
-                                      value={formData.representative_phone}
-                                      onChange={(e) => setFormData({ ...formData, representative_phone: e.target.value })}
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-email">Email</Label>
-                                    <Input
-                                      id="edit-email"
-                                      type="email"
-                                      value={formData.email}
-                                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                  </div>
-                                  {isSuperAdmin && (
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-region">Region</Label>
-                                      <Select
-                                        value={formData.region}
-                                        onValueChange={(value) => setFormData({ ...formData, region: value as any })}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="UAE">UAE</SelectItem>
-                                          <SelectItem value="SAUDI">Saudi Arabia</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  )}
-                                </div>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Dialog open={ledgerClient?.id === client.id} onOpenChange={(open) => !open && setLedgerClient(null)}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setLedgerClient(client)}
+                              title="Download Ledger"
+                            >
+                              <FileSpreadsheet className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Client Ledger - {client.name}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                  <Label htmlFor="edit-address">Address</Label>
-                                  <Textarea
-                                    id="edit-address"
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                  <Label>From Date</Label>
+                                  <Input
+                                    type="date"
+                                    value={ledgerFromDate}
+                                    onChange={(e) => setLedgerFromDate(e.target.value)}
                                   />
                                 </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button type="button" variant="outline" onClick={() => setEditingClient(null)}>
-                                    Cancel
-                                  </Button>
-                                  <Button type="submit" disabled={updateClient.isPending}>
-                                    {updateClient.isPending ? 'Saving...' : 'Save Changes'}
-                                  </Button>
+                                <div className="space-y-2">
+                                  <Label>To Date</Label>
+                                  <Input
+                                    type="date"
+                                    value={ledgerToDate}
+                                    onChange={(e) => setLedgerToDate(e.target.value)}
+                                  />
                                 </div>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </div>
+                              <Button
+                                className="w-full"
+                                onClick={() => {
+                                  downloadPdf({
+                                    type: 'ledger',
+                                    clientId: client.id,
+                                    fromDate: ledgerFromDate,
+                                    toDate: ledgerToDate,
+                                    filename: `Ledger-${client.name}.pdf`
+                                  });
+                                  setLedgerClient(null);
+                                }}
+                                disabled={isPdfLoading}
+                              >
+                                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                                Download Ledger
                               </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Client</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{client.name}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteClient.mutate(client.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        {canManage && (
+                          <>
+                            <Dialog open={editingClient?.id === client.id} onOpenChange={(open) => !open && setEditingClient(null)}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => handleEdit(client)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Edit Client</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-name">Client Name *</Label>
+                                      <Input
+                                        id="edit-name"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        required
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-company_name">Company Name</Label>
+                                      <Input
+                                        id="edit-company_name"
+                                        value={formData.company_name}
+                                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-representative_name">Representative Name</Label>
+                                      <Input
+                                        id="edit-representative_name"
+                                        value={formData.representative_name}
+                                        onChange={(e) => setFormData({ ...formData, representative_name: e.target.value })}
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-representative_phone">Representative Phone</Label>
+                                      <Input
+                                        id="edit-representative_phone"
+                                        value={formData.representative_phone}
+                                        onChange={(e) => setFormData({ ...formData, representative_phone: e.target.value })}
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="edit-email">Email</Label>
+                                      <Input
+                                        id="edit-email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                      />
+                                    </div>
+                                    {isSuperAdmin && (
+                                      <div className="space-y-2">
+                                        <Label htmlFor="edit-region">Region</Label>
+                                        <Select
+                                          value={formData.region}
+                                          onValueChange={(value) => setFormData({ ...formData, region: value as any })}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="UAE">UAE</SelectItem>
+                                            <SelectItem value="SAUDI">Saudi Arabia</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="edit-address">Address</Label>
+                                    <Textarea
+                                      id="edit-address"
+                                      value={formData.address}
+                                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="outline" onClick={() => setEditingClient(null)}>
+                                      Cancel
+                                    </Button>
+                                    <Button type="submit" disabled={updateClient.isPending}>
+                                      {updateClient.isPending ? 'Saving...' : 'Save Changes'}
+                                    </Button>
+                                  </div>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Client</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{client.name}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteClient.mutate(client.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

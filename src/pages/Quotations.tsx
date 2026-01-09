@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, FileText, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileText, Download } from 'lucide-react';
 import { useQuotations, useCreateQuotation, useUpdateQuotation, useDeleteQuotation, Quotation } from '@/hooks/useQuotations';
 import { useClients } from '@/hooks/useClients';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePdfDownload } from '@/hooks/usePdfDownload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -38,6 +39,7 @@ export default function Quotations() {
   const updateQuotation = useUpdateQuotation();
   const deleteQuotation = useDeleteQuotation();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
+  const { downloadPdf, isLoading: isPdfLoading } = usePdfDownload();
   
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -383,7 +385,7 @@ export default function Quotations() {
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Region</TableHead>
-                  {canManage && <TableHead className="w-[120px]">Actions</TableHead>}
+                  <TableHead className="w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -399,49 +401,64 @@ export default function Quotations() {
                     <TableCell>
                       <Badge variant="outline">{quotation.region}</Badge>
                     </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Dialog open={editingQuotation?.id === quotation.id} onOpenChange={(open) => !open && setEditingQuotation(null)}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl">
-                              <DialogHeader>
-                                <DialogTitle>Edit Quotation</DialogTitle>
-                              </DialogHeader>
-                              <FormContent />
-                            </DialogContent>
-                          </Dialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Quotation</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete quotation "{quotation.quotation_number}"?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteQuotation.mutate(quotation.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    )}
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => downloadPdf({
+                            type: 'quotation',
+                            id: quotation.id,
+                            filename: `Quotation-${quotation.quotation_number}.pdf`
+                          })}
+                          disabled={isPdfLoading}
+                          title="Download PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        {canManage && (
+                          <>
+                            <Dialog open={editingQuotation?.id === quotation.id} onOpenChange={(open) => !open && setEditingQuotation(null)}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle>Edit Quotation</DialogTitle>
+                                </DialogHeader>
+                                <FormContent />
+                              </DialogContent>
+                            </Dialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Quotation</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete quotation "{quotation.quotation_number}"?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteQuotation.mutate(quotation.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
