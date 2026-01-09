@@ -69,14 +69,29 @@ export function useCreateInvitation() {
         .select()
         .single();
       if (error) throw error;
+
+      // Send invitation email
+      const inviteUrl = `${window.location.origin}/register?token=${token}`;
+      await supabase.functions.invoke('send-email', {
+        body: {
+          type: 'invitation',
+          to: invitation.email,
+          data: {
+            role: invitation.role,
+            region: invitation.region,
+            inviteUrl,
+          },
+        },
+      });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] });
-      toast.success('Invitation created successfully');
+      toast.success('Invitation sent successfully');
     },
     onError: (error) => {
-      toast.error(`Failed to create invitation: ${error.message}`);
+      toast.error(`Failed to send invitation: ${error.message}`);
     },
   });
 }

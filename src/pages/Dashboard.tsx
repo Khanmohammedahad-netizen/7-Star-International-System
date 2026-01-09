@@ -1,13 +1,25 @@
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { CalendarCheck, TrendingUp, Target, Users } from 'lucide-react';
+import { CalendarCheck, TrendingUp, Target, Users, AlertTriangle, Bell } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { useEmailNotifications } from '@/hooks/useEmailNotifications';
+import { Badge } from '@/components/ui/badge';
 
 export default function Dashboard() {
   const { userRole, isSuperAdmin, profile } = useAuth();
+  const { triggerExpiryCheck } = useEmailNotifications();
+  const [isCheckingExpiry, setIsCheckingExpiry] = useState(false);
+
+  const handleExpiryCheck = async () => {
+    setIsCheckingExpiry(true);
+    await triggerExpiryCheck();
+    setIsCheckingExpiry(false);
+  };
 
   // Fetch events statistics
   const { data: eventsData } = useQuery({
@@ -93,13 +105,21 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Welcome back, {profile?.full_name?.split(' ')[0]}
-        </h1>
-        <p className="text-muted-foreground">
-          Here's an overview of your operations performance
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Welcome back, {profile?.full_name?.split(' ')[0]}
+          </h1>
+          <p className="text-muted-foreground">
+            Here's an overview of your operations performance
+          </p>
+        </div>
+        {isSuperAdmin && (
+          <Button variant="outline" onClick={handleExpiryCheck} disabled={isCheckingExpiry}>
+            <Bell className="mr-2 h-4 w-4" />
+            {isCheckingExpiry ? 'Checking...' : 'Check ID Expiries'}
+          </Button>
+        )}
       </div>
 
       {/* KPI Cards */}
