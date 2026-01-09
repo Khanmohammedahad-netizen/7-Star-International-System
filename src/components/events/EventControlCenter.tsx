@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { X, Package, User, Phone, CreditCard, FileText, Edit, CheckCircle, XCircle, Clock, Download } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,8 @@ import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { MaterialCombobox } from '@/components/materials/MaterialCombobox';
+import { getCurrencyCode } from '@/lib/currency';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-500',
@@ -105,9 +107,36 @@ export function EventControlCenter({ event, isOpen, onClose, onEdit, canManage }
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-materials', event?.id] });
       toast.success('Material added');
+      setSelectedMaterial('');
+      setMaterialQuantity(1);
     },
     onError: (error: any) => {
       toast.error(`Failed to add material: ${error.message}`);
+    },
+  });
+
+  // Create new material mutation
+  const createMaterial = useMutation({
+    mutationFn: async (name: string) => {
+      const { data, error } = await supabase
+        .from('materials')
+        .insert({
+          name,
+          region: event!.region,
+          unit_price: 0,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      setSelectedMaterial(data.id);
+      toast.success(`Material "${data.name}" created`);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to create material: ${error.message}`);
     },
   });
 
@@ -232,10 +261,10 @@ export function EventControlCenter({ event, isOpen, onClose, onEdit, canManage }
                       <div className="space-y-2">
                         {eventMaterials?.map((em: any) => (
                           <div key={em.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                            <div>
-                              <p className="text-sm font-medium">{em.materials?.name}</p>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{em.materials?.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                Qty: {em.quantity} × {em.unit_price} = {em.total_price}
+                                Qty: {em.quantity} × {em.unit_price} {getCurrencyCode(event.region)} = {em.total_price} {getCurrencyCode(event.region)}
                               </p>
                             </div>
                             {canManage && (
@@ -256,42 +285,45 @@ export function EventControlCenter({ event, isOpen, onClose, onEdit, canManage }
                       <>
                         <Separator />
                         <div className="space-y-2">
-                          <Label className="text-xs">Add Material</Label>
-                          <div className="flex gap-2">
-                            <Select value={selectedMaterial} onValueChange={setSelectedMaterial}>
-                              <SelectTrigger className="flex-1">
-                                <SelectValue placeholder="Select material" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {allMaterials?.map((m) => (
-                                  <SelectItem key={m.id} value={m.id}>
-                                    {m.name} ({m.unit_price})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              type="number"
-                              min={1}
-                              value={materialQuantity}
-                              onChange={(e) => setMaterialQuantity(parseInt(e.target.value) || 1)}
-                              className="w-20"
-                              placeholder="Qty"
-                            />
+                          <Label className="text-xs">Add Material (type to search or create)</Label>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex-1">
+                              <MaterialCombobox
+                                materials={allMaterials}
+                                value={selectedMaterial}
+                                onValueChange={setSelectedMaterial}
+                                onCreateNew={(name) => createMaterial.mutate(name)}
+                                placeholder="Search or type material..."
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                min={1}
+                                value={materialQuantity}
+                                onChange={(e) => setMaterialQuantity(parseInt(e.target.value) || 1)}
+                                className="w-20"
+                                placeholder="Qty"
+                              />
                             <Button
-                              size="sm"
-                              onClick={() => {
-                                if (selectedMaterial) {
-                                  addMaterial.mutate({ materialId: selectedMaterial, quantity: materialQuantity });
-                                  setSelectedMaterial('');
-                                  setMaterialQuantity(1);
-                                }
-                              }}
-                              disabled={!selectedMaterial}
-                            >
-                              Add
-                            </Button>
+                                size="sm"
+                                onClick={() => {
+                                  if (selectedMaterial) {
+                                    addMaterial.mutate({ materialId: selectedMaterial, quantity: materialQuantity });
+                                  }
+                                }}
+                                disabled={!selectedMaterial || addMaterial.isPending}
+                              >
+                                {addMaterial.isPending ? '...' : 'Add'}
+                              </Button>
+                            </div>
                           </div>
+                          {/* Material totals */}
+                          {eventMaterials && eventMaterials.length > 0 && (
+                            <div className="pt-2 border-t mt-2 text-sm text-right font-medium">
+                              Total: {eventMaterials.reduce((sum: number, em: any) => sum + (em.total_price || 0), 0).toFixed(2)} {getCurrencyCode(event.region)}
+                            </div>
+                          )}
                         </div>
                       </>
                     )}

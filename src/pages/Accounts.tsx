@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react';
 import { useCompanyAccounts, useCreateCompanyAccount, useUpdateCompanyAccount, useDeleteCompanyAccount, CompanyAccount } from '@/hooks/useAccounts';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getCurrencyCode } from '@/lib/currency';
 
 export default function Accounts() {
   const { data: accounts, isLoading } = useCompanyAccounts();
@@ -408,8 +409,8 @@ export default function Accounts() {
                       <TableCell>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</TableCell>
                       <TableCell className="font-medium">{account.project_name || '-'}</TableCell>
                       <TableCell>{account.expense_head || '-'}</TableCell>
-                      <TableCell>{(account.amount || 0).toFixed(2)} AED</TableCell>
-                      <TableCell className="font-medium">{(account.total || 0).toFixed(2)} AED</TableCell>
+                      <TableCell>{(account.amount || 0).toFixed(2)} {getCurrencyCode(account.region)}</TableCell>
+                      <TableCell className="font-medium">{(account.total || 0).toFixed(2)} {getCurrencyCode(account.region)}</TableCell>
                       <TableCell>
                         <Badge variant={account.invoice_available ? 'default' : 'secondary'}>
                           {account.invoice_available ? 'Yes' : 'No'}

@@ -6,8 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Currency mapping based on region
+const CURRENCY_MAP: Record<string, string> = {
+  UAE: 'AED',
+  SAUDI: 'SAR',
+};
+
+const CURRENCY_NAMES: Record<string, { main: string; sub: string }> = {
+  UAE: { main: 'Dirhams', sub: 'Fils' },
+  SAUDI: { main: 'Riyals', sub: 'Halalas' },
+};
+
+function getCurrencyCode(region: string): string {
+  return CURRENCY_MAP[region] || 'AED';
+}
+
+function getCurrencyNames(region: string): { main: string; sub: string } {
+  return CURRENCY_NAMES[region] || CURRENCY_NAMES.UAE;
+}
+
 // Number to words converter for amounts
-function numberToWords(num: number): string {
+function numberToWords(num: number, region: string): string {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
     'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -24,6 +43,7 @@ function numberToWords(num: number): string {
   const wholePart = Math.floor(num);
   const decimalPart = Math.round((num - wholePart) * 100);
   
+  const currencyNames = getCurrencyNames(region);
   let result = '';
   
   if (wholePart >= 1000000) {
@@ -37,10 +57,10 @@ function numberToWords(num: number): string {
     result = convertLessThanThousand(wholePart);
   }
   
-  result = result.trim() + ' Dirhams';
+  result = result.trim() + ' ' + currencyNames.main;
   
   if (decimalPart > 0) {
-    result += ' and ' + convertLessThanThousand(decimalPart) + ' Fils';
+    result += ' and ' + convertLessThanThousand(decimalPart) + ' ' + currencyNames.sub;
   }
   
   return result + ' Only';
@@ -78,6 +98,7 @@ serve(async (req) => {
       
       if (error) throw error;
       
+      const currency = getCurrencyCode(quotation.region);
       const rows = quotation.quotation_items
         .sort((a: any, b: any) => a.serial_no - b.serial_no)
         .map((item: any) => `
@@ -129,7 +150,7 @@ DUBAI - UAE</p>
 <thead>
 <tr>
 <th>S.No</th><th>Description</th><th>Size</th>
-<th>Quantity</th><th>Rate AED</th><th>Amount AED</th>
+<th>Quantity</th><th>Rate ${currency}</th><th>Amount ${currency}</th>
 </tr>
 </thead>
 <tbody>
@@ -138,7 +159,7 @@ ${rows}
 </table>
 
 <table>
-<tr><td class="right">Net Amount (AED)</td><td class="right">${formatNumber(quotation.net_amount)}</td></tr>
+<tr><td class="right">Net Amount (${currency})</td><td class="right">${formatNumber(quotation.net_amount)}</td></tr>
 <tr><td class="right">5% VAT</td><td class="right">${formatNumber(quotation.vat_amount)}</td></tr>
 <tr><td class="right"><strong>Total</strong></td><td class="right"><strong>${formatNumber(quotation.total_amount)}</strong></td></tr>
 </table>
@@ -177,6 +198,7 @@ Signature: ___________________
       
       if (error) throw error;
       
+      const currency = getCurrencyCode(invoice.region);
       const rows = invoice.invoice_items
         .sort((a: any, b: any) => a.serial_no - b.serial_no)
         .map((item: any) => `
@@ -226,7 +248,7 @@ DUBAI - UAE</p>
 <thead>
 <tr>
 <th>S.No</th><th>Description</th><th>Size</th>
-<th>Qty</th><th>Rate AED</th><th>Amount AED</th>
+<th>Qty</th><th>Rate ${currency}</th><th>Amount ${currency}</th>
 </tr>
 </thead>
 <tbody>
@@ -235,12 +257,12 @@ ${rows}
 </table>
 
 <table>
-<tr><td class="right">Net Amount</td><td class="right">${formatNumber(invoice.net_amount)}</td></tr>
-<tr><td class="right">5% VAT</td><td class="right">${formatNumber(invoice.vat_amount)}</td></tr>
-<tr><td class="right"><strong>Total</strong></td><td class="right"><strong>${formatNumber(invoice.total_amount)}</strong></td></tr>
+<tr><td class="right">Net Amount</td><td class="right">${formatNumber(invoice.net_amount)} ${currency}</td></tr>
+<tr><td class="right">5% VAT</td><td class="right">${formatNumber(invoice.vat_amount)} ${currency}</td></tr>
+<tr><td class="right"><strong>Total</strong></td><td class="right"><strong>${formatNumber(invoice.total_amount)} ${currency}</strong></td></tr>
 </table>
 
-<p>Amount in Words: ${numberToWords(invoice.total_amount)}</p>
+<p>Amount in Words: ${numberToWords(invoice.total_amount, invoice.region)}</p>
 
 <p>
 Confirmed by: Shaji Mohammed Khan<br>
@@ -265,6 +287,8 @@ IBAN: AE020030012980065820001
         .single();
       
       if (clientError) throw clientError;
+
+      const currency = getCurrencyCode(client.region);
 
       // Fetch invoices for this client within date range
       let invoiceQuery = supabase
@@ -375,8 +399,8 @@ DUBAI - UAE
 <th>Particulars</th>
 <th>INV Type</th>
 <th>INV No.</th>
-<th>Debit</th>
-<th>Credit</th>
+<th>Debit (${currency})</th>
+<th>Credit (${currency})</th>
 </tr>
 </thead>
 <tbody>
@@ -387,11 +411,11 @@ ${rows}
 <table>
 <tr>
 <td class="right"><strong>Closing Balance</strong></td>
-<td class="right">${formatNumber(closingBalance)}</td>
+<td class="right">${formatNumber(closingBalance)} ${currency}</td>
 </tr>
 </table>
 
-<p><strong>NOTE:</strong> Closing balance as on today in AED ${formatNumber(closingBalance)}</p>
+<p><strong>NOTE:</strong> Closing balance as on today in ${currency} ${formatNumber(closingBalance)}</p>
 
 <p>
 <strong>Bank Details:</strong><br>
