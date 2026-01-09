@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, FileText, Download } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileText, Download, FileSpreadsheet } from 'lucide-react';
 import { useQuotations, useCreateQuotation, useUpdateQuotation, useDeleteQuotation, Quotation } from '@/hooks/useQuotations';
 import { useClients } from '@/hooks/useClients';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePdfDownload } from '@/hooks/usePdfDownload';
+import { useExcelExport } from '@/hooks/useExcelExport';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { QuotationFormFields } from '@/components/quotations/QuotationFormFields';
 import { format, parseISO } from 'date-fns';
+import { getCurrencyCode } from '@/lib/currency';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-secondary text-secondary-foreground',
@@ -38,6 +40,7 @@ export default function Quotations() {
   const deleteQuotation = useDeleteQuotation();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
   const { downloadPdf, isLoading: isPdfLoading } = usePdfDownload();
+  const { exportToExcel, isLoading: isExportLoading } = useExcelExport();
   
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -150,11 +153,12 @@ export default function Quotations() {
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm mb-3">
         <div><p className="text-muted-foreground">Date</p><p>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</p></div>
-        <div><p className="text-muted-foreground">Total</p><p className="font-medium">{quotation.total_amount.toFixed(2)} {quotation.region === 'SAUDI' ? 'SAR' : 'AED'}</p></div>
+        <div><p className="text-muted-foreground">Total</p><p className="font-medium">{quotation.total_amount.toFixed(2)} {getCurrencyCode(quotation.region)}</p></div>
         <div><p className="text-muted-foreground">Region</p><Badge variant="outline">{quotation.region}</Badge></div>
       </div>
       <div className="flex gap-2 justify-end border-t pt-3">
-        <Button variant="ghost" size="sm" onClick={() => downloadPdf({ type: 'quotation', id: quotation.id, filename: `Quotation-${quotation.quotation_number}.pdf` })} disabled={isPdfLoading}><Download className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => downloadPdf({ type: 'quotation', id: quotation.id, filename: `Quotation-${quotation.quotation_number}.pdf` })} disabled={isPdfLoading} title="Download PDF"><Download className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => exportToExcel({ type: 'single-quotation', id: quotation.id })} disabled={isExportLoading} title="Download Excel"><FileSpreadsheet className="h-4 w-4" /></Button>
         {canManage && (
           <>
             <Button variant="ghost" size="sm" onClick={() => handleEdit(quotation)}><Edit className="h-4 w-4" /></Button>
@@ -204,12 +208,13 @@ export default function Quotations() {
                         <TableCell className="font-medium">{quotation.quotation_number}</TableCell>
                         <TableCell>{quotation.clients?.name}</TableCell>
                         <TableCell>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>{quotation.total_amount.toFixed(2)} {quotation.region === 'SAUDI' ? 'SAR' : 'AED'}</TableCell>
+                        <TableCell>{quotation.total_amount.toFixed(2)} {getCurrencyCode(quotation.region)}</TableCell>
                         <TableCell><Badge className={statusColors[quotation.status]}>{quotation.status}</Badge></TableCell>
                         <TableCell><Badge variant="outline">{quotation.region}</Badge></TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" onClick={() => downloadPdf({ type: 'quotation', id: quotation.id, filename: `Quotation-${quotation.quotation_number}.pdf` })} disabled={isPdfLoading} title="Download PDF"><Download className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => exportToExcel({ type: 'single-quotation', id: quotation.id })} disabled={isExportLoading} title="Download Excel"><FileSpreadsheet className="h-4 w-4" /></Button>
                             {canManage && (
                               <>
                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}><Edit className="h-4 w-4" /></Button>

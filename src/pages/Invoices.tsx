@@ -199,7 +199,8 @@ export default function Invoices() {
         <div><p className="text-muted-foreground">Balance</p><p className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>{(invoice.balance || 0).toFixed(2)} {getCurrencyCode(invoice.region)}</p></div>
       </div>
       <div className="flex gap-2 justify-end border-t pt-3">
-        <Button variant="ghost" size="sm" onClick={() => downloadPdf({ type: 'invoice', id: invoice.id, filename: `Invoice-${invoice.invoice_number}.pdf` })} disabled={isPdfLoading}><Download className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => downloadPdf({ type: 'invoice', id: invoice.id, filename: `Invoice-${invoice.invoice_number}.pdf` })} disabled={isPdfLoading} title="Download PDF"><Download className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => exportToExcel({ type: 'single-invoice', id: invoice.id })} disabled={isExportLoading} title="Download Excel"><FileSpreadsheet className="h-4 w-4" /></Button>
         {canManage && (
           <>
             <Button variant="ghost" size="sm" onClick={() => handleEdit(invoice)}><Edit className="h-4 w-4" /></Button>
@@ -274,6 +275,7 @@ export default function Invoices() {
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" onClick={() => downloadPdf({ type: 'invoice', id: invoice.id, filename: `Invoice-${invoice.invoice_number}.pdf` })} disabled={isPdfLoading} title="Download PDF"><Download className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => exportToExcel({ type: 'single-invoice', id: invoice.id })} disabled={isExportLoading} title="Download Excel"><FileSpreadsheet className="h-4 w-4" /></Button>
                             {canManage && (
                               <>
                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}><Edit className="h-4 w-4" /></Button>

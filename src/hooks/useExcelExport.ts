@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ExportOptions {
-  type: 'invoices' | 'payments' | 'accounts';
+  type: 'invoices' | 'payments' | 'accounts' | 'single-invoice' | 'single-quotation' | 'ledger';
+  id?: string;
   fromDate?: string;
   toDate?: string;
   region?: string;
@@ -12,11 +13,11 @@ interface ExportOptions {
 export function useExcelExport() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const exportToExcel = async ({ type, fromDate, toDate, region }: ExportOptions) => {
+  const exportToExcel = async ({ type, id, fromDate, toDate, region }: ExportOptions) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('export-excel', {
-        body: { type, fromDate, toDate, region },
+        body: { type, id, fromDate, toDate, region },
       });
 
       if (error) throw error;
