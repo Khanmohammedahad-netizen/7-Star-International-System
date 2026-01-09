@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Receipt } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Receipt, Download } from 'lucide-react';
 import { useInvoices, useCreateInvoice, useUpdateInvoice, useDeleteInvoice, Invoice } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePdfDownload } from '@/hooks/usePdfDownload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -39,6 +40,7 @@ export default function Invoices() {
   const updateInvoice = useUpdateInvoice();
   const deleteInvoice = useDeleteInvoice();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
+  const { downloadPdf, isLoading: isPdfLoading } = usePdfDownload();
   
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -397,7 +399,7 @@ export default function Invoices() {
                   <TableHead>Paid</TableHead>
                   <TableHead>Balance</TableHead>
                   <TableHead>Status</TableHead>
-                  {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
+                  <TableHead className="w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -414,49 +416,64 @@ export default function Invoices() {
                     <TableCell>
                       <Badge className={statusColors[invoice.status]}>{invoice.status}</Badge>
                     </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Dialog open={editingInvoice?.id === invoice.id} onOpenChange={(open) => !open && setEditingInvoice(null)}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl">
-                              <DialogHeader>
-                                <DialogTitle>Edit Invoice</DialogTitle>
-                              </DialogHeader>
-                              <FormContent />
-                            </DialogContent>
-                          </Dialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete invoice "{invoice.invoice_number}"?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteInvoice.mutate(invoice.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    )}
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => downloadPdf({
+                            type: 'invoice',
+                            id: invoice.id,
+                            filename: `Invoice-${invoice.invoice_number}.pdf`
+                          })}
+                          disabled={isPdfLoading}
+                          title="Download PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        {canManage && (
+                          <>
+                            <Dialog open={editingInvoice?.id === invoice.id} onOpenChange={(open) => !open && setEditingInvoice(null)}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle>Edit Invoice</DialogTitle>
+                                </DialogHeader>
+                                <FormContent />
+                              </DialogContent>
+                            </Dialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete invoice "{invoice.invoice_number}"?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteInvoice.mutate(invoice.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
