@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { ClientCombobox } from '@/components/ClientCombobox';
 import { format, parseISO } from 'date-fns';
 
 const statusColors: Record<string, string> = {
@@ -156,8 +157,8 @@ export default function Quotations() {
   const { netAmount, vatAmount, totalAmount } = calculateTotals();
 
   const FormContent = () => (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Quotation Number *</Label>
           <Input
@@ -168,19 +169,12 @@ export default function Quotations() {
         </div>
         <div className="space-y-2">
           <Label>Client *</Label>
-          <Select
+          <ClientCombobox
+            clients={clients}
             value={formData.client_id}
             onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients?.map(client => (
-                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Search or select client..."
+          />
         </div>
         <div className="space-y-2">
           <Label>Date *</Label>
@@ -241,65 +235,119 @@ export default function Quotations() {
             <Plus className="h-4 w-4 mr-1" /> Add Item
           </Button>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px]">S.No</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-[100px]">Size</TableHead>
-              <TableHead className="w-[80px]">Qty</TableHead>
-              <TableHead className="w-[100px]">Rate</TableHead>
-              <TableHead className="w-[100px]">Amount</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{item.serial_no}</TableCell>
-                <TableCell>
-                  <Input
-                    value={item.description}
-                    onChange={(e) => updateItemAmount(index, 'description', e.target.value)}
-                    placeholder="Description"
-                  />
-                </TableCell>
-                <TableCell>
+        
+        {/* Mobile-friendly line items */}
+        <div className="space-y-4 sm:hidden">
+          {items.map((item, index) => (
+            <Card key={index} className="p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Item #{item.serial_no}</span>
+                {items.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Input
+                  value={item.description}
+                  onChange={(e) => updateItemAmount(index, 'description', e.target.value)}
+                  placeholder="Description"
+                />
+                <div className="grid grid-cols-2 gap-2">
                   <Input
                     value={item.size}
                     onChange={(e) => updateItemAmount(index, 'size', e.target.value)}
                     placeholder="Size"
                   />
-                </TableCell>
-                <TableCell>
                   <Input
                     type="number"
                     value={item.quantity}
                     onChange={(e) => updateItemAmount(index, 'quantity', parseInt(e.target.value) || 0)}
                     min={1}
+                    placeholder="Qty"
                   />
-                </TableCell>
-                <TableCell>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
                   <Input
                     type="number"
                     value={item.rate}
                     onChange={(e) => updateItemAmount(index, 'rate', parseFloat(e.target.value) || 0)}
                     min={0}
                     step="0.01"
+                    placeholder="Rate"
                   />
-                </TableCell>
-                <TableCell className="font-medium">{item.amount.toFixed(2)}</TableCell>
-                <TableCell>
-                  {items.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </TableCell>
+                  <div className="flex items-center justify-end font-medium">
+                    Amount: {item.amount.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]">S.No</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="w-[100px]">Size</TableHead>
+                <TableHead className="w-[80px]">Qty</TableHead>
+                <TableHead className="w-[100px]">Rate</TableHead>
+                <TableHead className="w-[100px]">Amount</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {items.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.serial_no}</TableCell>
+                  <TableCell>
+                    <Input
+                      value={item.description}
+                      onChange={(e) => updateItemAmount(index, 'description', e.target.value)}
+                      placeholder="Description"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      value={item.size}
+                      onChange={(e) => updateItemAmount(index, 'size', e.target.value)}
+                      placeholder="Size"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateItemAmount(index, 'quantity', parseInt(e.target.value) || 0)}
+                      min={1}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.rate}
+                      onChange={(e) => updateItemAmount(index, 'rate', parseFloat(e.target.value) || 0)}
+                      min={0}
+                      step="0.01"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{item.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {items.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <div className="flex justify-end">
@@ -318,7 +366,7 @@ export default function Quotations() {
         />
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={() => { setIsCreateOpen(false); setEditingQuotation(null); }}>
           Cancel
         </Button>
@@ -329,9 +377,91 @@ export default function Quotations() {
     </form>
   );
 
+  // Mobile card view for quotations
+  const QuotationCard = ({ quotation }: { quotation: Quotation }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-medium">{quotation.quotation_number}</p>
+          <p className="text-sm text-muted-foreground">{quotation.clients?.name}</p>
+        </div>
+        <Badge className={statusColors[quotation.status]}>{quotation.status}</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Date</p>
+          <p>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Total</p>
+          <p className="font-medium">{quotation.total_amount.toFixed(2)} AED</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Region</p>
+          <Badge variant="outline">{quotation.region}</Badge>
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end border-t pt-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => downloadPdf({
+            type: 'quotation',
+            id: quotation.id,
+            filename: `Quotation-${quotation.quotation_number}.pdf`
+          })}
+          disabled={isPdfLoading}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+        {canManage && (
+          <>
+            <Dialog open={editingQuotation?.id === quotation.id} onOpenChange={(open) => !open && setEditingQuotation(null)}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(quotation)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh]">
+                <DialogHeader>
+                  <DialogTitle>Edit Quotation</DialogTitle>
+                </DialogHeader>
+                <FormContent />
+              </DialogContent>
+            </Dialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Quotation</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete quotation "{quotation.quotation_number}"?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteQuotation.mutate(quotation.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quotations</h1>
           <p className="text-muted-foreground">Manage quotations and proposals</p>
@@ -339,11 +469,12 @@ export default function Quotations() {
         {canManage && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="mr-2 h-4 w-4" /> New Quotation
+              <Button onClick={resetForm} size="sm" className="sm:size-default">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Quotation</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Create Quotation</DialogTitle>
               </DialogHeader>
@@ -356,7 +487,7 @@ export default function Quotations() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search quotations..."
@@ -376,93 +507,105 @@ export default function Quotations() {
               <p>No quotations found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quotation #</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead className="w-[150px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
                 {filteredQuotations?.map((quotation) => (
-                  <TableRow key={quotation.id}>
-                    <TableCell className="font-medium">{quotation.quotation_number}</TableCell>
-                    <TableCell>{quotation.clients?.name}</TableCell>
-                    <TableCell>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>{quotation.total_amount.toFixed(2)} AED</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[quotation.status]}>{quotation.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{quotation.region}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => downloadPdf({
-                            type: 'quotation',
-                            id: quotation.id,
-                            filename: `Quotation-${quotation.quotation_number}.pdf`
-                          })}
-                          disabled={isPdfLoading}
-                          title="Download PDF"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        {canManage && (
-                          <>
-                            <Dialog open={editingQuotation?.id === quotation.id} onOpenChange={(open) => !open && setEditingQuotation(null)}>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl">
-                                <DialogHeader>
-                                  <DialogTitle>Edit Quotation</DialogTitle>
-                                </DialogHeader>
-                                <FormContent />
-                              </DialogContent>
-                            </Dialog>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Quotation</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete quotation "{quotation.quotation_number}"?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteQuotation.mutate(quotation.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <QuotationCard key={quotation.id} quotation={quotation} />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Quotation #</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead className="w-[150px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredQuotations?.map((quotation) => (
+                      <TableRow key={quotation.id}>
+                        <TableCell className="font-medium">{quotation.quotation_number}</TableCell>
+                        <TableCell>{quotation.clients?.name}</TableCell>
+                        <TableCell>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>{quotation.total_amount.toFixed(2)} AED</TableCell>
+                        <TableCell>
+                          <Badge className={statusColors[quotation.status]}>{quotation.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{quotation.region}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => downloadPdf({
+                                type: 'quotation',
+                                id: quotation.id,
+                                filename: `Quotation-${quotation.quotation_number}.pdf`
+                              })}
+                              disabled={isPdfLoading}
+                              title="Download PDF"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {canManage && (
+                              <>
+                                <Dialog open={editingQuotation?.id === quotation.id} onOpenChange={(open) => !open && setEditingQuotation(null)}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl max-h-[90vh]">
+                                    <DialogHeader>
+                                      <DialogTitle>Edit Quotation</DialogTitle>
+                                    </DialogHeader>
+                                    <FormContent />
+                                  </DialogContent>
+                                </Dialog>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Quotation</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete quotation "{quotation.quotation_number}"?
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteQuotation.mutate(quotation.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

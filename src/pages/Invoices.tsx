@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { ClientCombobox } from '@/components/ClientCombobox';
 import { format, parseISO, subMonths } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -173,8 +174,8 @@ export default function Invoices() {
   const { netAmount, vatAmount, totalAmount } = calculateTotals();
 
   const FormContent = () => (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Invoice Number *</Label>
           <div className="flex gap-2">
@@ -192,19 +193,12 @@ export default function Invoices() {
         </div>
         <div className="space-y-2">
           <Label>Client *</Label>
-          <Select
+          <ClientCombobox
+            clients={clients}
             value={formData.client_id}
             onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients?.map(client => (
-                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Search or select client..."
+          />
         </div>
         <div className="space-y-2">
           <Label>Date *</Label>
@@ -258,65 +252,119 @@ export default function Invoices() {
             <Plus className="h-4 w-4 mr-1" /> Add Item
           </Button>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px]">S.No</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="w-[100px]">Size</TableHead>
-              <TableHead className="w-[80px]">Qty</TableHead>
-              <TableHead className="w-[100px]">Rate</TableHead>
-              <TableHead className="w-[100px]">Amount</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{item.serial_no}</TableCell>
-                <TableCell>
-                  <Input
-                    value={item.description}
-                    onChange={(e) => updateItemAmount(index, 'description', e.target.value)}
-                    placeholder="Description"
-                  />
-                </TableCell>
-                <TableCell>
+        
+        {/* Mobile-friendly line items */}
+        <div className="space-y-4 sm:hidden">
+          {items.map((item, index) => (
+            <Card key={index} className="p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Item #{item.serial_no}</span>
+                {items.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Input
+                  value={item.description}
+                  onChange={(e) => updateItemAmount(index, 'description', e.target.value)}
+                  placeholder="Description"
+                />
+                <div className="grid grid-cols-2 gap-2">
                   <Input
                     value={item.size}
                     onChange={(e) => updateItemAmount(index, 'size', e.target.value)}
                     placeholder="Size"
                   />
-                </TableCell>
-                <TableCell>
                   <Input
                     type="number"
                     value={item.quantity}
                     onChange={(e) => updateItemAmount(index, 'quantity', parseInt(e.target.value) || 0)}
                     min={1}
+                    placeholder="Qty"
                   />
-                </TableCell>
-                <TableCell>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
                   <Input
                     type="number"
                     value={item.rate}
                     onChange={(e) => updateItemAmount(index, 'rate', parseFloat(e.target.value) || 0)}
                     min={0}
                     step="0.01"
+                    placeholder="Rate"
                   />
-                </TableCell>
-                <TableCell className="font-medium">{item.amount.toFixed(2)}</TableCell>
-                <TableCell>
-                  {items.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </TableCell>
+                  <div className="flex items-center justify-end font-medium">
+                    Amount: {item.amount.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]">S.No</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="w-[100px]">Size</TableHead>
+                <TableHead className="w-[80px]">Qty</TableHead>
+                <TableHead className="w-[100px]">Rate</TableHead>
+                <TableHead className="w-[100px]">Amount</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {items.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.serial_no}</TableCell>
+                  <TableCell>
+                    <Input
+                      value={item.description}
+                      onChange={(e) => updateItemAmount(index, 'description', e.target.value)}
+                      placeholder="Description"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      value={item.size}
+                      onChange={(e) => updateItemAmount(index, 'size', e.target.value)}
+                      placeholder="Size"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateItemAmount(index, 'quantity', parseInt(e.target.value) || 0)}
+                      min={1}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.rate}
+                      onChange={(e) => updateItemAmount(index, 'rate', parseFloat(e.target.value) || 0)}
+                      min={0}
+                      step="0.01"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{item.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {items.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <div className="flex justify-end">
@@ -335,7 +383,7 @@ export default function Invoices() {
         />
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={() => { setIsCreateOpen(false); setEditingInvoice(null); }}>
           Cancel
         </Button>
@@ -346,9 +394,97 @@ export default function Invoices() {
     </form>
   );
 
+  // Mobile card view for invoices
+  const InvoiceCard = ({ invoice }: { invoice: Invoice }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-medium">{invoice.invoice_number}</p>
+          <p className="text-sm text-muted-foreground">{invoice.clients?.name}</p>
+        </div>
+        <Badge className={statusColors[invoice.status]}>{invoice.status}</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Date</p>
+          <p>{format(parseISO(invoice.invoice_date), 'MMM d, yyyy')}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Total</p>
+          <p className="font-medium">{invoice.total_amount.toFixed(2)} AED</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Paid</p>
+          <p>{invoice.amount_paid.toFixed(2)} AED</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Balance</p>
+          <p className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>
+            {(invoice.balance || 0).toFixed(2)} AED
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end border-t pt-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => downloadPdf({
+            type: 'invoice',
+            id: invoice.id,
+            filename: `Invoice-${invoice.invoice_number}.pdf`
+          })}
+          disabled={isPdfLoading}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+        {canManage && (
+          <>
+            <Dialog open={editingInvoice?.id === invoice.id} onOpenChange={(open) => !open && setEditingInvoice(null)}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(invoice)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh]">
+                <DialogHeader>
+                  <DialogTitle>Edit Invoice</DialogTitle>
+                </DialogHeader>
+                <FormContent />
+              </DialogContent>
+            </Dialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete invoice "{invoice.invoice_number}"?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteInvoice.mutate(invoice.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
           <p className="text-muted-foreground">Manage invoices and billing</p>
@@ -356,8 +492,9 @@ export default function Invoices() {
         <div className="flex gap-2">
           <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export
+              <Button variant="outline" size="sm" className="sm:size-default">
+                <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -365,7 +502,7 @@ export default function Invoices() {
                 <DialogTitle>Export Invoices to Excel</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>From Date</Label>
                     <Input
@@ -405,11 +542,12 @@ export default function Invoices() {
           {canManage && (
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" /> New Invoice
+                <Button onClick={resetForm} size="sm" className="sm:size-default">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">New Invoice</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl">
+              <DialogContent className="max-w-4xl max-h-[90vh]">
                 <DialogHeader>
                   <DialogTitle>Create Invoice</DialogTitle>
                 </DialogHeader>
@@ -423,7 +561,7 @@ export default function Invoices() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search invoices..."
@@ -443,95 +581,107 @@ export default function Invoices() {
               <p>No invoices found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Paid</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[150px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
                 {filteredInvoices?.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                    <TableCell>{invoice.clients?.name}</TableCell>
-                    <TableCell>{format(parseISO(invoice.invoice_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>{invoice.total_amount.toFixed(2)} AED</TableCell>
-                    <TableCell>{invoice.amount_paid.toFixed(2)} AED</TableCell>
-                    <TableCell className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>
-                      {(invoice.balance || 0).toFixed(2)} AED
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[invoice.status]}>{invoice.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => downloadPdf({
-                            type: 'invoice',
-                            id: invoice.id,
-                            filename: `Invoice-${invoice.invoice_number}.pdf`
-                          })}
-                          disabled={isPdfLoading}
-                          title="Download PDF"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        {canManage && (
-                          <>
-                            <Dialog open={editingInvoice?.id === invoice.id} onOpenChange={(open) => !open && setEditingInvoice(null)}>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl">
-                                <DialogHeader>
-                                  <DialogTitle>Edit Invoice</DialogTitle>
-                                </DialogHeader>
-                                <FormContent />
-                              </DialogContent>
-                            </Dialog>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete invoice "{invoice.invoice_number}"?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteInvoice.mutate(invoice.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <InvoiceCard key={invoice.id} invoice={invoice} />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice #</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Paid</TableHead>
+                      <TableHead>Balance</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-[150px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvoices?.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                        <TableCell>{invoice.clients?.name}</TableCell>
+                        <TableCell>{format(parseISO(invoice.invoice_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>{invoice.total_amount.toFixed(2)} AED</TableCell>
+                        <TableCell>{invoice.amount_paid.toFixed(2)} AED</TableCell>
+                        <TableCell className={(invoice.balance || 0) > 0 ? 'text-destructive font-medium' : ''}>
+                          {(invoice.balance || 0).toFixed(2)} AED
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={statusColors[invoice.status]}>{invoice.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => downloadPdf({
+                                type: 'invoice',
+                                id: invoice.id,
+                                filename: `Invoice-${invoice.invoice_number}.pdf`
+                              })}
+                              disabled={isPdfLoading}
+                              title="Download PDF"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {canManage && (
+                              <>
+                                <Dialog open={editingInvoice?.id === invoice.id} onOpenChange={(open) => !open && setEditingInvoice(null)}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl max-h-[90vh]">
+                                    <DialogHeader>
+                                      <DialogTitle>Edit Invoice</DialogTitle>
+                                    </DialogHeader>
+                                    <FormContent />
+                                  </DialogContent>
+                                </Dialog>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete invoice "{invoice.invoice_number}"?
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteInvoice.mutate(invoice.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
