@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Receipt, Download } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Receipt, Download, FileSpreadsheet } from 'lucide-react';
 import { useInvoices, useCreateInvoice, useUpdateInvoice, useDeleteInvoice, Invoice } from '@/hooks/useInvoices';
 import { useClients } from '@/hooks/useClients';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePdfDownload } from '@/hooks/usePdfDownload';
+import { useExcelExport } from '@/hooks/useExcelExport';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, subMonths } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<string, string> = {
@@ -41,7 +42,10 @@ export default function Invoices() {
   const deleteInvoice = useDeleteInvoice();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
   const { downloadPdf, isLoading: isPdfLoading } = usePdfDownload();
-  
+  const { exportToExcel, isLoading: isExportLoading } = useExcelExport();
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportFromDate, setExportFromDate] = useState(format(subMonths(new Date(), 3), 'yyyy-MM-dd'));
+  const [exportToDate, setExportToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -349,21 +353,71 @@ export default function Invoices() {
           <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
           <p className="text-muted-foreground">Manage invoices and billing</p>
         </div>
-        {canManage && (
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <div className="flex gap-2">
+          <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="mr-2 h-4 w-4" /> New Invoice
+              <Button variant="outline">
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create Invoice</DialogTitle>
+                <DialogTitle>Export Invoices to Excel</DialogTitle>
               </DialogHeader>
-              <FormContent />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>From Date</Label>
+                    <Input
+                      type="date"
+                      value={exportFromDate}
+                      onChange={(e) => setExportFromDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>To Date</Label>
+                    <Input
+                      type="date"
+                      value={exportToDate}
+                      onChange={(e) => setExportToDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    exportToExcel({
+                      type: 'invoices',
+                      fromDate: exportFromDate,
+                      toDate: exportToDate,
+                      region: isSuperAdmin ? undefined : userRole?.region,
+                    });
+                    setIsExportOpen(false);
+                  }}
+                  disabled={isExportLoading}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Download Excel
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
-        )}
+          {canManage && (
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="mr-2 h-4 w-4" /> New Invoice
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Create Invoice</DialogTitle>
+                </DialogHeader>
+                <FormContent />
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       <Card>

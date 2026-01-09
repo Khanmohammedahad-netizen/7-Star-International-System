@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, CreditCard, FileSpreadsheet } from 'lucide-react';
 import { usePayments, useCreatePayment, useUpdatePayment, useDeletePayment, Payment } from '@/hooks/usePayments';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useAuth } from '@/contexts/AuthContext';
+import { useExcelExport } from '@/hooks/useExcelExport';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, subMonths } from 'date-fns';
 
 const paymentModeLabels: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
@@ -30,6 +31,10 @@ export default function Payments() {
   const updatePayment = useUpdatePayment();
   const deletePayment = useDeletePayment();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
+  const { exportToExcel, isLoading: isExportLoading } = useExcelExport();
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportFromDate, setExportFromDate] = useState(format(subMonths(new Date(), 3), 'yyyy-MM-dd'));
+  const [exportToDate, setExportToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -205,31 +210,81 @@ export default function Payments() {
           <h1 className="text-2xl font-bold tracking-tight">Payments</h1>
           <p className="text-muted-foreground">Track and record payments</p>
         </div>
-        {canManage && (
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <div className="flex gap-2">
+          <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="mr-2 h-4 w-4" /> Record Payment
+              <Button variant="outline">
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent>
               <DialogHeader>
-                <DialogTitle>Record Payment</DialogTitle>
+                <DialogTitle>Export Payments to Excel</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <FormFields />
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createPayment.isPending}>
-                    {createPayment.isPending ? 'Recording...' : 'Record Payment'}
-                  </Button>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>From Date</Label>
+                    <Input
+                      type="date"
+                      value={exportFromDate}
+                      onChange={(e) => setExportFromDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>To Date</Label>
+                    <Input
+                      type="date"
+                      value={exportToDate}
+                      onChange={(e) => setExportToDate(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </form>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    exportToExcel({
+                      type: 'payments',
+                      fromDate: exportFromDate,
+                      toDate: exportToDate,
+                      region: isSuperAdmin ? undefined : userRole?.region,
+                    });
+                    setIsExportOpen(false);
+                  }}
+                  disabled={isExportLoading}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Download Excel
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
-        )}
+          {canManage && (
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="mr-2 h-4 w-4" /> Record Payment
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Record Payment</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <FormFields />
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createPayment.isPending}>
+                      {createPayment.isPending ? 'Recording...' : 'Record Payment'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       <Card>
