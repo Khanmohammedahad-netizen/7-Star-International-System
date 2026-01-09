@@ -150,7 +150,7 @@ export default function Quotations() {
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm mb-3">
         <div><p className="text-muted-foreground">Date</p><p>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</p></div>
-        <div><p className="text-muted-foreground">Total</p><p className="font-medium">{quotation.total_amount.toFixed(2)} AED</p></div>
+        <div><p className="text-muted-foreground">Total</p><p className="font-medium">{quotation.total_amount.toFixed(2)} {quotation.region === 'SAUDI' ? 'SAR' : 'AED'}</p></div>
         <div><p className="text-muted-foreground">Region</p><Badge variant="outline">{quotation.region}</Badge></div>
       </div>
       <div className="flex gap-2 justify-end border-t pt-3">
@@ -204,7 +204,7 @@ export default function Quotations() {
                         <TableCell className="font-medium">{quotation.quotation_number}</TableCell>
                         <TableCell>{quotation.clients?.name}</TableCell>
                         <TableCell>{format(parseISO(quotation.quotation_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>{quotation.total_amount.toFixed(2)} AED</TableCell>
+                        <TableCell>{quotation.total_amount.toFixed(2)} {quotation.region === 'SAUDI' ? 'SAR' : 'AED'}</TableCell>
                         <TableCell><Badge className={statusColors[quotation.status]}>{quotation.status}</Badge></TableCell>
                         <TableCell><Badge variant="outline">{quotation.region}</Badge></TableCell>
                         <TableCell>

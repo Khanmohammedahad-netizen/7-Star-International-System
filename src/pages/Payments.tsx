@@ -108,9 +108,52 @@ export default function Payments() {
 
   const canManage = hasPermission('canManagePayments');
 
+  // Mobile card component
+  const PaymentCard = ({ payment }: { payment: Payment }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-medium">{payment.invoices?.invoice_number}</p>
+          <p className="text-sm text-muted-foreground">{payment.invoices?.clients?.name}</p>
+        </div>
+        <Badge variant="outline">{payment.region}</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Date</p>
+          <p>{format(parseISO(payment.payment_date), 'MMM d, yyyy')}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Amount</p>
+          <p className="font-medium text-emerald-600">{payment.amount.toFixed(2)} {payment.region === 'SAUDI' ? 'SAR' : 'AED'}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Mode</p>
+          <Badge variant="outline">{paymentModeLabels[payment.payment_mode]}</Badge>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Reference</p>
+          <p>{payment.reference_number || '-'}</p>
+        </div>
+      </div>
+      {canManage && (
+        <div className="flex gap-2 justify-end border-t pt-3">
+          <Button variant="ghost" size="sm" onClick={() => handleEdit(payment)}><Edit className="h-4 w-4" /></Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild><Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader><AlertDialogTitle>Delete Payment</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete this payment?</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deletePayment.mutate(payment.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+    </Card>
+  );
+
   const FormFields = () => (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Invoice *</Label>
           <Select
@@ -204,17 +247,17 @@ export default function Payments() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Payments</h1>
-          <p className="text-muted-foreground">Track and record payments</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Payments</h1>
+          <p className="text-sm text-muted-foreground">Track and record payments</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export
+              <Button variant="outline" size="sm">
+                <FileSpreadsheet className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Export</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -222,7 +265,7 @@ export default function Payments() {
                 <DialogTitle>Export Payments to Excel</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>From Date</Label>
                     <Input
@@ -262,17 +305,17 @@ export default function Payments() {
           {canManage && (
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" /> Record Payment
+                <Button onClick={resetForm} size="sm" className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Record Payment</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Record Payment</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <FormFields />
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                       Cancel
                     </Button>
@@ -310,26 +353,33 @@ export default function Payments() {
               <p>No payments found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Mode</TableHead>
-                  <TableHead>Reference</TableHead>
-                  <TableHead>Region</TableHead>
-                  {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments?.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{format(parseISO(payment.payment_date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="font-medium">{payment.invoices?.invoice_number}</TableCell>
-                    <TableCell>{payment.invoices?.clients?.name}</TableCell>
-                    <TableCell className="font-medium text-emerald-600">{payment.amount.toFixed(2)} AED</TableCell>
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
+                {filteredPayments?.map((payment) => <PaymentCard key={payment.id} payment={payment} />)}
+              </div>
+              {/* Desktop table view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Mode</TableHead>
+                      <TableHead>Reference</TableHead>
+                      <TableHead>Region</TableHead>
+                      {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPayments?.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>{format(parseISO(payment.payment_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell className="font-medium">{payment.invoices?.invoice_number}</TableCell>
+                        <TableCell>{payment.invoices?.clients?.name}</TableCell>
+                        <TableCell className="font-medium text-emerald-600">{payment.amount.toFixed(2)} {payment.region === 'SAUDI' ? 'SAR' : 'AED'}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{paymentModeLabels[payment.payment_mode]}</Badge>
                     </TableCell>
@@ -391,9 +441,11 @@ export default function Payments() {
                       </TableCell>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

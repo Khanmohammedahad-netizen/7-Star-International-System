@@ -103,19 +103,19 @@ export default function Dashboard() {
   ].filter(d => d.value > 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
             Welcome back, {profile?.full_name?.split(' ')[0]}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Here's an overview of your operations performance
           </p>
         </div>
         {isSuperAdmin && (
-          <Button variant="outline" onClick={handleExpiryCheck} disabled={isCheckingExpiry}>
+          <Button variant="outline" size="sm" onClick={handleExpiryCheck} disabled={isCheckingExpiry} className="w-full sm:w-auto">
             <Bell className="mr-2 h-4 w-4" />
             {isCheckingExpiry ? 'Checking...' : 'Check ID Expiries'}
           </Button>

@@ -85,26 +85,65 @@ export default function Clients() {
 
   const canManage = hasPermission('canManageClients');
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+  // Mobile card component
+  const ClientCard = ({ client }: { client: Client }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Clients</h1>
-          <p className="text-muted-foreground">Manage your client database</p>
+          <p className="font-medium">{client.name}</p>
+          <p className="text-sm text-muted-foreground">{client.company_name || '-'}</p>
+        </div>
+        <Badge variant="outline">{client.region}</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Representative</p>
+          <p>{client.representative_name || '-'}</p>
+          {client.representative_phone && <p className="text-xs text-muted-foreground">{client.representative_phone}</p>}
+        </div>
+        <div>
+          <p className="text-muted-foreground">Email</p>
+          <p className="truncate">{client.email || '-'}</p>
+        </div>
+      </div>
+      <div className="flex gap-2 justify-end border-t pt-3">
+        <Button variant="ghost" size="sm" onClick={() => setLedgerClient(client)}><FileSpreadsheet className="h-4 w-4" /></Button>
+        {canManage && (
+          <>
+            <Button variant="ghost" size="sm" onClick={() => handleEdit(client)}><Edit className="h-4 w-4" /></Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild><Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader><AlertDialogTitle>Delete Client</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete "{client.name}"?</AlertDialogDescription></AlertDialogHeader>
+                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteClient.mutate(client.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Clients</h1>
+          <p className="text-sm text-muted-foreground">Manage your client database</p>
         </div>
         {canManage && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="mr-2 h-4 w-4" /> Add Client
+              <Button onClick={resetForm} size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 sm:mr-2" /> <span className="sm:inline">Add Client</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Client</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Client Name *</Label>
                     <Input
@@ -173,7 +212,7 @@ export default function Clients() {
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   />
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancel
                   </Button>
@@ -210,18 +249,25 @@ export default function Clients() {
               <p>No clients found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Representative</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead className="w-[150px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
+                {filteredClients?.map((client) => <ClientCard key={client.id} client={client} />)}
+              </div>
+              {/* Desktop table view */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Representative</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead className="w-[150px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                 {filteredClients?.map((client) => (
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">{client.name}</TableCell>
@@ -417,8 +463,10 @@ export default function Clients() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody>
-            </Table>
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

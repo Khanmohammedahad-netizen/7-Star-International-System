@@ -125,11 +125,54 @@ export default function Accounts() {
 
   const canManage = hasPermission('canManageAccounts');
 
+  // Mobile card component
+  const AccountCard = ({ account }: { account: CompanyAccount }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-medium">{account.project_name || 'No Project'}</p>
+          <p className="text-sm text-muted-foreground">{account.expense_head || '-'}</p>
+        </div>
+        <Badge variant="outline">{account.region}</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Date</p>
+          <p>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Total</p>
+          <p className="font-medium">{(account.total || 0).toFixed(2)} {getCurrencyCode(account.region)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Amount</p>
+          <p>{(account.amount || 0).toFixed(2)} {getCurrencyCode(account.region)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Invoice</p>
+          <Badge variant={account.invoice_available ? 'default' : 'secondary'}>{account.invoice_available ? 'Yes' : 'No'}</Badge>
+        </div>
+      </div>
+      {canManage && (
+        <div className="flex gap-2 justify-end border-t pt-3">
+          <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}><Edit className="h-4 w-4" /></Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild><Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader><AlertDialogTitle>Delete Entry</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete this entry?</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteAccount.mutate(account.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+    </Card>
+  );
+
   const FormContent = () => (
     <form onSubmit={handleSubmit}>
       <ScrollArea className="max-h-[70vh] pr-4">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Entry Date *</Label>
               <Input
@@ -197,9 +240,9 @@ export default function Accounts() {
             </div>
           </div>
 
-          <div className="border rounded-lg p-4 space-y-4">
-            <h4 className="font-medium">Payment Breakdown</h4>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="border rounded-lg p-3 sm:p-4 space-y-4">
+            <h4 className="font-medium text-sm sm:text-base">Payment Breakdown</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label>E7 Bank Transfer</Label>
                 <Input
@@ -343,20 +386,20 @@ export default function Accounts() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Company Accounts</h1>
-          <p className="text-muted-foreground">Track company expenses and transactions</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Company Accounts</h1>
+          <p className="text-sm text-muted-foreground">Track company expenses and transactions</p>
         </div>
         {canManage && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="mr-2 h-4 w-4" /> Add Entry
+              <Button onClick={resetForm} size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 sm:mr-2" /> <span className="sm:inline">Add Entry</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>New Account Entry</DialogTitle>
               </DialogHeader>
@@ -389,37 +432,43 @@ export default function Accounts() {
               <p>No account entries found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Expense Head</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Region</TableHead>
-                    {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAccounts?.map((account) => (
-                    <TableRow key={account.id}>
-                      <TableCell>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</TableCell>
-                      <TableCell className="font-medium">{account.project_name || '-'}</TableCell>
-                      <TableCell>{account.expense_head || '-'}</TableCell>
-                      <TableCell>{(account.amount || 0).toFixed(2)} {getCurrencyCode(account.region)}</TableCell>
-                      <TableCell className="font-medium">{(account.total || 0).toFixed(2)} {getCurrencyCode(account.region)}</TableCell>
-                      <TableCell>
-                        <Badge variant={account.invoice_available ? 'default' : 'secondary'}>
-                          {account.invoice_available ? 'Yes' : 'No'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{account.region}</Badge>
-                      </TableCell>
-                      {canManage && (
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
+                {filteredAccounts?.map((account) => <AccountCard key={account.id} account={account} />)}
+              </div>
+              {/* Desktop table view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Expense Head</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead>Region</TableHead>
+                      {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAccounts?.map((account) => (
+                      <TableRow key={account.id}>
+                        <TableCell>{format(parseISO(account.entry_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell className="font-medium">{account.project_name || '-'}</TableCell>
+                        <TableCell>{account.expense_head || '-'}</TableCell>
+                        <TableCell>{(account.amount || 0).toFixed(2)} {getCurrencyCode(account.region)}</TableCell>
+                        <TableCell className="font-medium">{(account.total || 0).toFixed(2)} {getCurrencyCode(account.region)}</TableCell>
+                        <TableCell>
+                          <Badge variant={account.invoice_available ? 'default' : 'secondary'}>
+                            {account.invoice_available ? 'Yes' : 'No'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{account.region}</Badge>
+                        </TableCell>
+                        {canManage && (
                         <TableCell>
                           <div className="flex gap-1">
                             <Dialog open={editingAccount?.id === account.id} onOpenChange={(open) => !open && setEditingAccount(null)}>
@@ -463,10 +512,11 @@ export default function Accounts() {
                         </TableCell>
                       )}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

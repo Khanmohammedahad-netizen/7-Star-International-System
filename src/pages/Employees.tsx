@@ -108,8 +108,54 @@ export default function Employees() {
 
   const canManage = hasPermission('canManageEmployees');
 
+  // Mobile card component
+  const EmployeeCard = ({ employee }: { employee: Employee }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <p className="font-medium">{employee.full_name}</p>
+          <p className="text-sm text-muted-foreground">{employee.position || '-'}</p>
+        </div>
+        <div className="flex flex-col gap-1 items-end">
+          <Badge variant="outline">{employee.region}</Badge>
+          <Badge variant={employee.is_active ? 'default' : 'secondary'}>
+            {employee.is_active ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div>
+          <p className="text-muted-foreground">Emirates ID</p>
+          <p>{employee.emirates_id || '-'}</p>
+          {employee.emirates_id_expiry && (
+            <div className="flex items-center gap-1 mt-1">
+              {getExpiryBadge(employee.emirates_id_expiry)}
+            </div>
+          )}
+        </div>
+        <div>
+          <p className="text-muted-foreground">Contact</p>
+          <p className="text-xs">{employee.email || '-'}</p>
+          <p className="text-xs text-muted-foreground">{employee.phone || '-'}</p>
+        </div>
+      </div>
+      {canManage && (
+        <div className="flex gap-2 justify-end border-t pt-3">
+          <Button variant="ghost" size="sm" onClick={() => handleEdit(employee)}><Edit className="h-4 w-4" /></Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild><Button variant="ghost" size="sm"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader><AlertDialogTitle>Delete Employee</AlertDialogTitle><AlertDialogDescription>Are you sure you want to delete "{employee.full_name}"?</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteEmployee.mutate(employee.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+    </Card>
+  );
+
   const FormFields = () => (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label>Full Name *</Label>
         <Input
@@ -206,17 +252,17 @@ export default function Employees() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Employees</h1>
-          <p className="text-muted-foreground">Manage employee records and documents</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Employees</h1>
+          <p className="text-sm text-muted-foreground">Manage employee records and documents</p>
         </div>
         {canManage && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="mr-2 h-4 w-4" /> Add Employee
+              <Button onClick={resetForm} size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 sm:mr-2" /> <span className="sm:inline">Add Employee</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -225,7 +271,7 @@ export default function Employees() {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <FormFields />
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancel
                   </Button>
@@ -262,26 +308,33 @@ export default function Employees() {
               <p>No employees found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Emirates ID</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Status</TableHead>
-                  {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees?.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell className="font-medium">{employee.full_name}</TableCell>
-                    <TableCell>{employee.position || '-'}</TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div>{employee.emirates_id || '-'}</div>
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-4 sm:hidden">
+                {filteredEmployees?.map((employee) => <EmployeeCard key={employee.id} employee={employee} />)}
+              </div>
+              {/* Desktop table view */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Emirates ID</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead>Status</TableHead>
+                      {canManage && <TableHead className="w-[100px]">Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEmployees?.map((employee) => (
+                      <TableRow key={employee.id}>
+                        <TableCell className="font-medium">{employee.full_name}</TableCell>
+                        <TableCell>{employee.position || '-'}</TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div>{employee.emirates_id || '-'}</div>
                         {employee.emirates_id_expiry && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
@@ -358,10 +411,12 @@ export default function Employees() {
                         </div>
                       </TableCell>
                     )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

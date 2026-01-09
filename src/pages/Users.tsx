@@ -77,17 +77,45 @@ export default function Users() {
     setEditingUser(null);
   };
 
+  // Mobile card for users
+  const UserCard = ({ user }: { user: UserWithRole }) => {
+    const role = user.user_roles?.[0];
+    return (
+      <Card className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <p className="font-medium">{user.full_name}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={user.is_active ?? true}
+              onCheckedChange={(checked) => toggleUserActive.mutate({ userId: user.id, isActive: checked })}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <Badge variant="outline">{role ? roleLabels[role.role] : 'No Role'}</Badge>
+          <Badge variant="secondary">{role?.region || '-'}</Badge>
+        </div>
+        <div className="flex gap-2 justify-end border-t pt-3">
+          <Button variant="ghost" size="sm" onClick={() => handleEditRole(user)}><Edit className="h-4 w-4" /></Button>
+        </div>
+      </Card>
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">Manage users and invitations</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">User Management</h1>
+          <p className="text-sm text-muted-foreground">Manage users and invitations</p>
         </div>
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Mail className="mr-2 h-4 w-4" /> Invite User
+            <Button size="sm" className="w-full sm:w-auto">
+              <Mail className="h-4 w-4 sm:mr-2" /> <span className="sm:inline">Invite User</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -137,7 +165,7 @@ export default function Users() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsInviteOpen(false)}>
                   Cancel
                 </Button>
@@ -185,27 +213,34 @@ export default function Users() {
                   <p>No users found</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Region</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers?.map((user) => {
-                      const role = user.user_roles?.[0];
-                      return (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.full_name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{role ? roleLabels[role.role] : 'No Role'}</Badge>
-                          </TableCell>
+                <>
+                  {/* Mobile card view */}
+                  <div className="space-y-4 sm:hidden">
+                    {filteredUsers?.map((user) => <UserCard key={user.id} user={user} />)}
+                  </div>
+                  {/* Desktop table view */}
+                  <div className="hidden sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Region</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[100px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers?.map((user) => {
+                          const role = user.user_roles?.[0];
+                          return (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">{user.full_name}</TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{role ? roleLabels[role.role] : 'No Role'}</Badge>
+                              </TableCell>
                           <TableCell>
                             <Badge variant="secondary">{role?.region || '-'}</Badge>
                           </TableCell>
@@ -280,18 +315,20 @@ export default function Users() {
                                 </form>
                               </DialogContent>
                             </Dialog>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        <TabsContent value="invitations">
+            <TabsContent value="invitations">
           <Card>
             <CardContent className="pt-6">
               {invitationsLoading ? (
