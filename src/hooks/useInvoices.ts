@@ -56,17 +56,26 @@ export function useCreateInvoice() {
 
   return useMutation({
     mutationFn: async ({ items, ...invoice }: InvoiceInsert & { items: Omit<InvoiceItemInsert, 'invoice_id'>[] }) => {
+      // Calculate balance = total_amount - amount_paid
+      const balance = (invoice.total_amount || 0) - (invoice.amount_paid || 0);
+      
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
-        .insert(invoice)
+        .insert({ ...invoice, balance })
         .select()
         .single();
       if (invoiceError) throw invoiceError;
 
       if (items.length > 0) {
+        // Calculate amount for each item (quantity * rate) before inserting
         const itemsWithInvoiceId = items.map(item => ({
-          ...item,
           invoice_id: invoiceData.id,
+          serial_no: item.serial_no,
+          description: item.description,
+          size: item.size || null,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.quantity * item.rate, // Always calculate amount
         }));
         const { error: itemsError } = await supabase
           .from('invoice_items')
@@ -91,9 +100,12 @@ export function useUpdateInvoice() {
 
   return useMutation({
     mutationFn: async ({ id, items, ...updates }: InvoiceUpdate & { id: string; items?: Omit<InvoiceItemInsert, 'invoice_id'>[] }) => {
+      // Calculate balance = total_amount - amount_paid
+      const balance = (updates.total_amount || 0) - (updates.amount_paid || 0);
+      
       const { data, error } = await supabase
         .from('invoices')
-        .update(updates)
+        .update({ ...updates, balance })
         .eq('id', id)
         .select()
         .single();
@@ -102,9 +114,15 @@ export function useUpdateInvoice() {
       if (items) {
         await supabase.from('invoice_items').delete().eq('invoice_id', id);
         if (items.length > 0) {
+          // Calculate amount for each item (quantity * rate) before inserting
           const itemsWithInvoiceId = items.map(item => ({
-            ...item,
             invoice_id: id,
+            serial_no: item.serial_no,
+            description: item.description,
+            size: item.size || null,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.quantity * item.rate, // Always calculate amount
           }));
           const { error: itemsError } = await supabase
             .from('invoice_items')
