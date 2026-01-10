@@ -483,8 +483,8 @@ export default function Events() {
                             <TableCell>
                               <Badge variant="outline">{event.region}</Badge>
                             </TableCell>
-                          {canManage && (
-                            <TableCell onClick={(e) => e.stopPropagation()}>
+                            {canManage && (
+                              <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-1">
                                 {event.status === 'pending' && (
                                   <>
@@ -543,11 +543,12 @@ export default function Events() {
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
+                                </div>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        )
+                      })}
                     </TableBody>
                   </Table>
                 </div>
