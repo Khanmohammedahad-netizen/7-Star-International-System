@@ -56,12 +56,10 @@ export function useCreateInvoice() {
 
   return useMutation({
     mutationFn: async ({ items, ...invoice }: InvoiceInsert & { items: Omit<InvoiceItemInsert, 'invoice_id'>[] }) => {
-      // Calculate balance = total_amount - amount_paid
-      const balance = (invoice.total_amount || 0) - (invoice.amount_paid || 0);
-      
+      // Note: balance is a generated column (total_amount - amount_paid), so we don't include it
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
-        .insert({ ...invoice, balance })
+        .insert(invoice)
         .select()
         .single();
       if (invoiceError) throw invoiceError;
@@ -100,12 +98,10 @@ export function useUpdateInvoice() {
 
   return useMutation({
     mutationFn: async ({ id, items, ...updates }: InvoiceUpdate & { id: string; items?: Omit<InvoiceItemInsert, 'invoice_id'>[] }) => {
-      // Calculate balance = total_amount - amount_paid
-      const balance = (updates.total_amount || 0) - (updates.amount_paid || 0);
-      
+      // Note: balance is a generated column (total_amount - amount_paid), so we don't include it
       const { data, error } = await supabase
         .from('invoices')
-        .update({ ...updates, balance })
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
