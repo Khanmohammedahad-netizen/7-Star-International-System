@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { Plus, Search, Calendar as CalendarIcon, List, ChevronLeft, ChevronRight, Edit, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, useApproveEvent, Event } from '@/hooks/useEvents';
 import { useClients } from '@/hooks/useClients';
+import { useVendors, useEventVendors, useLinkVendorToEvent, useUnlinkVendorFromEvent } from '@/hooks/useVendors';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,10 +25,13 @@ const statusColors: Record<string, string> = {
 export default function Events() {
   const { data: events, isLoading } = useEvents();
   const { data: clients } = useClients();
+  const { data: vendors } = useVendors();
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
   const approveEvent = useApproveEvent();
+  const linkVendor = useLinkVendorToEvent();
+  const unlinkVendor = useUnlinkVendorFromEvent();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
   
   const [search, setSearch] = useState('');
@@ -49,6 +53,8 @@ export default function Events() {
     staff_count: 0,
     region: userRole?.region || 'UAE',
   });
+  const [selectedVendorIds, setSelectedVendorIds] = useState<string[]>([]);
+  const [editingVendorIds, setEditingVendorIds] = useState<string[]>([]);
 
   const filteredEvents = events?.filter(event =>
     event.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,6 +73,8 @@ export default function Events() {
       region: userRole?.region || 'UAE',
     });
     setEditingEvent(null);
+    setSelectedVendorIds([]);
+    setEditingVendorIds([]);
   }, [userRole?.region]);
 
   // Stable field change handler to prevent re-renders
@@ -81,17 +89,45 @@ export default function Events() {
       event_end_date: formData.event_end_date || null,
       staff_count: Number(formData.staff_count),
     };
+    
     if (editingEvent) {
       await updateEvent.mutateAsync({ id: editingEvent.id, ...data });
+      
+      // Handle vendor linking for edit
+      const currentVendorIds = editingVendorIds;
+      const newVendorIds = selectedVendorIds;
+      
+      // Unlink vendors that were removed
+      for (const vendorId of currentVendorIds) {
+        if (!newVendorIds.includes(vendorId)) {
+          await unlinkVendor.mutateAsync({ eventId: editingEvent.id, vendorId });
+        }
+      }
+      
+      // Link new vendors
+      for (const vendorId of newVendorIds) {
+        if (!currentVendorIds.includes(vendorId)) {
+          await linkVendor.mutateAsync({ eventId: editingEvent.id, vendorId });
+        }
+      }
+      
       setEditingEvent(null);
     } else {
-      await createEvent.mutateAsync(data as any);
+      const result = await createEvent.mutateAsync(data as any);
+      
+      // Link vendors to new event
+      if (result && selectedVendorIds.length > 0) {
+        for (const vendorId of selectedVendorIds) {
+          await linkVendor.mutateAsync({ eventId: result.id, vendorId });
+        }
+      }
+      
       setIsCreateOpen(false);
     }
     resetForm();
   };
 
-  const handleEdit = useCallback((event: Event) => {
+  const handleEdit = useCallback(async (event: Event) => {
     setEditingEvent(event);
     setFormData({
       title: event.title,
@@ -103,6 +139,15 @@ export default function Events() {
       staff_count: event.staff_count || 0,
       region: event.region,
     });
+    
+    // Fetch existing vendors for this event
+    const { data: eventVendors } = await import('@/integrations/supabase/client').then(m => 
+      m.supabase.from('event_vendors').select('vendor_id').eq('event_id', event.id)
+    );
+    const vendorIds = eventVendors?.map((ev: any) => ev.vendor_id) || [];
+    setSelectedVendorIds(vendorIds);
+    setEditingVendorIds(vendorIds);
+    
     setIsControlCenterOpen(false);
   }, []);
 
@@ -199,6 +244,9 @@ export default function Events() {
                     onFieldChange={handleFieldChange}
                     clients={clients}
                     isSuperAdmin={isSuperAdmin}
+                    vendors={vendors}
+                    selectedVendorIds={selectedVendorIds}
+                    onVendorSelectionChange={setSelectedVendorIds}
                   />
                   <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
@@ -442,6 +490,9 @@ export default function Events() {
               onFieldChange={handleFieldChange}
               clients={clients}
               isSuperAdmin={isSuperAdmin}
+              vendors={vendors}
+              selectedVendorIds={selectedVendorIds}
+              onVendorSelectionChange={setSelectedVendorIds}
             />
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
