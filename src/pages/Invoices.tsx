@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { InvoiceFormFields } from '@/components/invoices/InvoiceFormFields';
+import { InvoiceFormFields, InvoiceItem } from '@/components/invoices/InvoiceFormFields';
 import { format, parseISO, subMonths } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrencyCode } from '@/lib/currency';
@@ -24,15 +24,6 @@ const statusColors: Record<string, string> = {
   approved: 'bg-emerald-500 text-white',
   rejected: 'bg-red-500 text-white',
 };
-
-interface InvoiceItem {
-  serial_no: number;
-  description: string;
-  size: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
 
 export default function Invoices() {
   const { data: invoices, isLoading } = useInvoices();
@@ -58,7 +49,7 @@ export default function Invoices() {
     status: 'draft' as 'draft' | 'sent' | 'approved' | 'rejected',
   });
   const [items, setItems] = useState<InvoiceItem[]>([
-    { serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0 },
+    { serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0, is_sub_item: false, parent_serial_no: null },
   ]);
   const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
 
@@ -89,12 +80,121 @@ export default function Invoices() {
     });
   }, []);
 
+  // Add a main item
   const handleAddItem = useCallback(() => {
-    setItems(prev => [...prev, { serial_no: prev.length + 1, description: '', size: '', quantity: 1, rate: 0, amount: 0 }]);
+    setItems(prev => {
+      // Find the next main item serial number
+      const mainItems = prev.filter(item => !item.is_sub_item);
+      const nextSerialNo = mainItems.length + 1;
+      return [...prev, { serial_no: nextSerialNo, description: '', size: '', quantity: 1, rate: 0, amount: 0, is_sub_item: false, parent_serial_no: null }];
+    });
+  }, []);
+
+  // Add a sub-item under a parent main item
+  const handleAddSubItem = useCallback((parentIndex: number) => {
+    setItems(prev => {
+      const parentItem = prev[parentIndex];
+      if (parentItem.is_sub_item) return prev; // Can't add sub-item to a sub-item
+      
+      // Find all sub-items of this parent
+      const subItems = prev.filter(item => item.is_sub_item && item.parent_serial_no === parentItem.serial_no);
+      const subSerialNo = subItems.length + 1;
+      
+      // Insert sub-item right after the parent's last sub-item or after parent
+      let insertIndex = parentIndex + 1;
+      for (let i = parentIndex + 1; i < prev.length; i++) {
+        if (prev[i].is_sub_item && prev[i].parent_serial_no === parentItem.serial_no) {
+          insertIndex = i + 1;
+        } else if (!prev[i].is_sub_item || prev[i].parent_serial_no !== parentItem.serial_no) {
+          break;
+        }
+      }
+      
+      const newSubItem: InvoiceItem = {
+        serial_no: subSerialNo,
+        description: '',
+        size: '',
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+        is_sub_item: true,
+        parent_serial_no: parentItem.serial_no,
+      };
+      
+      const newItems = [...prev];
+      newItems.splice(insertIndex, 0, newSubItem);
+      return newItems;
+    });
   }, []);
 
   const handleRemoveItem = useCallback((index: number) => {
-    setItems(prev => prev.filter((_, i) => i !== index).map((item, i) => ({ ...item, serial_no: i + 1 })));
+    setItems(prev => {
+      const removedItem = prev[index];
+      let newItems = prev.filter((_, i) => i !== index);
+      
+      // If removing a main item, also remove its sub-items
+      if (!removedItem.is_sub_item) {
+        newItems = newItems.filter(item => !(item.is_sub_item && item.parent_serial_no === removedItem.serial_no));
+        
+        // Renumber remaining main items and update sub-item parent references
+        let mainSerialNo = 0;
+        const oldToNewSerialMap: Record<number, number> = {};
+        
+        newItems = newItems.map(item => {
+          if (!item.is_sub_item) {
+            mainSerialNo++;
+            oldToNewSerialMap[item.serial_no] = mainSerialNo;
+            return { ...item, serial_no: mainSerialNo };
+          }
+          return item;
+        });
+        
+        // Update parent_serial_no references for sub-items
+        newItems = newItems.map(item => {
+          if (item.is_sub_item && item.parent_serial_no !== null) {
+            return { ...item, parent_serial_no: oldToNewSerialMap[item.parent_serial_no] || item.parent_serial_no };
+          }
+          return item;
+        });
+        
+        // Renumber sub-items within each parent
+        const parentGroups: Record<number, InvoiceItem[]> = {};
+        newItems.forEach(item => {
+          if (item.is_sub_item && item.parent_serial_no !== null) {
+            if (!parentGroups[item.parent_serial_no]) {
+              parentGroups[item.parent_serial_no] = [];
+            }
+            parentGroups[item.parent_serial_no].push(item);
+          }
+        });
+        
+        Object.values(parentGroups).forEach(group => {
+          group.forEach((item, idx) => {
+            item.serial_no = idx + 1;
+          });
+        });
+      } else {
+        // Renumber remaining sub-items of the same parent
+        let subSerialNo = 0;
+        newItems = newItems.map(item => {
+          if (item.is_sub_item && item.parent_serial_no === removedItem.parent_serial_no) {
+            subSerialNo++;
+            return { ...item, serial_no: subSerialNo };
+          }
+          return item;
+        });
+      }
+      
+      return newItems;
+    });
+  }, []);
+
+  // Generate display serial number (1, 1.1, 1.2, 2, 2.1, etc.)
+  const getDisplaySerialNo = useCallback((item: InvoiceItem, _index: number): string => {
+    if (item.is_sub_item && item.parent_serial_no !== null) {
+      return `${item.parent_serial_no}.${item.serial_no}`;
+    }
+    return String(item.serial_no);
   }, []);
 
   const generateInvoiceNumber = useCallback(async () => {
@@ -128,7 +228,7 @@ export default function Invoices() {
       region: userRole?.region || 'UAE',
       status: 'draft',
     });
-    setItems([{ serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0 }]);
+    setItems([{ serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0, is_sub_item: false, parent_serial_no: null }]);
     setEditingInvoice(null);
   }, [userRole?.region]);
 
@@ -146,6 +246,8 @@ export default function Invoices() {
         quantity: item.quantity,
         rate: item.rate,
         amount: item.amount,
+        is_sub_item: item.is_sub_item,
+        parent_serial_no: item.parent_serial_no,
       })),
     };
     
@@ -177,9 +279,11 @@ export default function Invoices() {
         quantity: item.quantity,
         rate: item.rate,
         amount: item.amount || (item.quantity * item.rate),
+        is_sub_item: (item as any).is_sub_item || false,
+        parent_serial_no: (item as any).parent_serial_no || null,
       })));
     } else {
-      setItems([{ serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0 }]);
+      setItems([{ serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0, is_sub_item: false, parent_serial_no: null }]);
     }
   }, []);
 
@@ -243,7 +347,7 @@ export default function Invoices() {
               <DialogContent className="max-w-4xl max-h-[90vh]">
                 <DialogHeader><DialogTitle>Create Invoice</DialogTitle></DialogHeader>
                 <form onSubmit={handleSubmit}>
-                  <InvoiceFormFields formData={formData} onFieldChange={handleFieldChange} clients={clients} isSuperAdmin={isSuperAdmin} isEditing={false} isGeneratingNumber={isGeneratingNumber} onGenerateNumber={generateInvoiceNumber} items={items} onItemChange={handleItemChange} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} totals={totals} />
+                  <InvoiceFormFields formData={formData} onFieldChange={handleFieldChange} clients={clients} isSuperAdmin={isSuperAdmin} isEditing={false} isGeneratingNumber={isGeneratingNumber} onGenerateNumber={generateInvoiceNumber} items={items} onItemChange={handleItemChange} onAddItem={handleAddItem} onAddSubItem={handleAddSubItem} onRemoveItem={handleRemoveItem} totals={totals} getDisplaySerialNo={getDisplaySerialNo} />
                   <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t mt-4">
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={createInvoice.isPending}>{createInvoice.isPending ? 'Saving...' : 'Create Invoice'}</Button>
@@ -304,7 +408,7 @@ export default function Invoices() {
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader><DialogTitle>Edit Invoice</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit}>
-            <InvoiceFormFields formData={formData} onFieldChange={handleFieldChange} clients={clients} isSuperAdmin={isSuperAdmin} isEditing={true} isGeneratingNumber={isGeneratingNumber} onGenerateNumber={generateInvoiceNumber} items={items} onItemChange={handleItemChange} onAddItem={handleAddItem} onRemoveItem={handleRemoveItem} totals={totals} />
+            <InvoiceFormFields formData={formData} onFieldChange={handleFieldChange} clients={clients} isSuperAdmin={isSuperAdmin} isEditing={true} isGeneratingNumber={isGeneratingNumber} onGenerateNumber={generateInvoiceNumber} items={items} onItemChange={handleItemChange} onAddItem={handleAddItem} onAddSubItem={handleAddSubItem} onRemoveItem={handleRemoveItem} totals={totals} getDisplaySerialNo={getDisplaySerialNo} />
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t mt-4">
               <Button type="button" variant="outline" onClick={() => setEditingInvoice(null)}>Cancel</Button>
               <Button type="submit" disabled={updateInvoice.isPending}>{updateInvoice.isPending ? 'Saving...' : 'Save Changes'}</Button>

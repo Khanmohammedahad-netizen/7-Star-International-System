@@ -292,18 +292,51 @@ body { font-family:Calibri, Arial; font-size:12px; }
       if (error) throw error;
       
       const currency = getCurrencyCode(invoice.region);
-      const rows = invoice.invoice_items
-        .sort((a: any, b: any) => a.serial_no - b.serial_no)
-        .map((item: any) => `
-          <tr>
-            <td class="text-center">${item.serial_no}</td>
-            <td>${item.description}</td>
-            <td class="text-center">${item.size || '-'}</td>
-            <td class="text-center">${item.quantity}</td>
-            <td class="text-right">${formatNumber(item.rate)}</td>
-            <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
-          </tr>
-        `).join('');
+      
+      // Sort items: main items first by serial_no, then sub-items under their parent
+      const sortedItems = invoice.invoice_items.sort((a: any, b: any) => {
+        // If both are main items, sort by serial_no
+        if (!a.is_sub_item && !b.is_sub_item) {
+          return a.serial_no - b.serial_no;
+        }
+        // If both are sub-items with the same parent, sort by serial_no
+        if (a.is_sub_item && b.is_sub_item && a.parent_serial_no === b.parent_serial_no) {
+          return a.serial_no - b.serial_no;
+        }
+        // Get effective parent for sorting
+        const aParent = a.is_sub_item ? a.parent_serial_no : a.serial_no;
+        const bParent = b.is_sub_item ? b.parent_serial_no : b.serial_no;
+        
+        if (aParent !== bParent) {
+          return aParent - bParent;
+        }
+        // Same parent: main item comes before its sub-items
+        if (!a.is_sub_item) return -1;
+        if (!b.is_sub_item) return 1;
+        return a.serial_no - b.serial_no;
+      });
+      
+      const rows = sortedItems
+        .map((item: any) => {
+          // Generate display serial number (1, 1.1, 1.2, 2, etc.)
+          const displaySerialNo = item.is_sub_item && item.parent_serial_no 
+            ? `${item.parent_serial_no}.${item.serial_no}` 
+            : String(item.serial_no);
+          
+          // Add indentation for sub-items in description
+          const descriptionStyle = item.is_sub_item ? 'padding-left: 15px;' : '';
+          
+          return `
+            <tr>
+              <td class="text-center">${displaySerialNo}</td>
+              <td style="${descriptionStyle}">${item.description}</td>
+              <td class="text-center">${item.size || '-'}</td>
+              <td class="text-center">${item.quantity}</td>
+              <td class="text-right">${formatNumber(item.rate)}</td>
+              <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
+            </tr>
+          `;
+        }).join('');
 
       html = `<!DOCTYPE html>
 <html>
