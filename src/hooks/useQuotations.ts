@@ -64,7 +64,7 @@ export function useCreateQuotation() {
       if (quotationError) throw quotationError;
 
       if (items.length > 0) {
-        // Calculate amount for each item (quantity * rate) before inserting
+        // Note: amount is a generated column (quantity * rate), so we don't include it
         const itemsWithQuotationId = items.map(item => ({
           quotation_id: quotationData.id,
           serial_no: item.serial_no,
@@ -72,7 +72,6 @@ export function useCreateQuotation() {
           size: item.size || null,
           quantity: item.quantity,
           rate: item.rate,
-          amount: item.quantity * item.rate, // Always calculate amount
         }));
         const { error: itemsError } = await supabase
           .from('quotation_items')
@@ -109,7 +108,7 @@ export function useUpdateQuotation() {
         // Delete existing items and insert new ones
         await supabase.from('quotation_items').delete().eq('quotation_id', id);
         if (items.length > 0) {
-          // Calculate amount for each item (quantity * rate) before inserting
+          // Note: amount is a generated column (quantity * rate), so we don't include it
           const itemsWithQuotationId = items.map(item => ({
             quotation_id: id,
             serial_no: item.serial_no,
@@ -117,7 +116,6 @@ export function useUpdateQuotation() {
             size: item.size || null,
             quantity: item.quantity,
             rate: item.rate,
-            amount: item.quantity * item.rate, // Always calculate amount
           }));
           const { error: itemsError } = await supabase
             .from('quotation_items')
