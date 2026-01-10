@@ -213,68 +213,126 @@ Signature: ___________________
         `).join('');
 
       html = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Tax Invoice</title>
+<title>7 Star Tax Invoice</title>
 <style>
-body { font-family: Arial; font-size: 12px; margin: 30px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-th, td { border: 1px solid black; padding: 6px; }
-.right { text-align: right; }
-.center { text-align: center; }
-.client-table td { border: none; }
+@page { size: A4; margin: 20mm; }
+body { font-family: Arial, sans-serif; font-size: 12px; color: #000; margin: 0; padding: 20px; }
+.invoice { width: 100%; }
+.header { display: flex; justify-content: space-between; }
+.logo { font-size: 22px; font-weight: bold; color: #c00000; }
+.company-details { text-align: right; font-size: 11px; }
+.title { text-align: center; font-size: 20px; font-weight: bold; margin: 15px 0 5px; }
+.green-bar { background: #cfe5b3; height: 25px; margin-bottom: 12px; }
+.info { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.info div { width: 48%; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+table, th, td { border: 1px solid #000; }
+th { background: #e6e6e6; padding: 6px; text-align: center; }
+td { padding: 6px; height: 28px; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.totals { width: 40%; margin-left: auto; margin-top: 10px; }
+.totals td { background: #cfe5b3; font-weight: bold; }
+.footer { clear: both; margin-top: 25px; font-size: 11px; }
+.bottom-bar {
+  background: #cfe5b3;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  font-weight: bold;
+  margin-top: 30px;
+}
+.footer-left, .footer-center, .footer-right { width: 33%; }
+.footer-center { text-align: center; }
+.footer-right { text-align: right; }
 </style>
 </head>
 <body>
+<div class="invoice">
+  <div class="header">
+    <div class="logo">7 STAR INTERNATIONAL EVENTS L.L.C</div>
+    <div class="company-details">
+      P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+      SAIH SHUBAIB 3<br>
+      DUBAI - UAE
+    </div>
+  </div>
 
-<h3>7 STAR INTERNATIONAL EVENTS L.L.C</h3>
-<p>P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-SAIH SHUBAIB 3<br>
-DUBAI - UAE</p>
+  <div class="title">Tax Invoice</div>
+  <div class="green-bar"></div>
 
-<h2 class="center">TAX INVOICE</h2>
+  <div class="info">
+    <div>
+      Invoice Date: ${formatDate(invoice.invoice_date)}<br>
+      Invoice Number: ${invoice.invoice_number}<br>
+      VAT TRN: 104038790200003
+    </div>
+    <div>
+      <strong>Client:</strong><br>
+      ${invoice.clients?.name || ''}
+    </div>
+  </div>
 
-<table class="client-table">
-<tr><td>Client:</td><td>${invoice.clients?.name || ''}</td></tr>
-<tr><td>Invoice Date:</td><td>${formatDate(invoice.invoice_date)}</td></tr>
-<tr><td>Invoice Number:</td><td>${invoice.invoice_number}</td></tr>
-<tr><td>VAT TRN:</td><td>104038790200003</td></tr>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>S.No</th>
+        <th>Description</th>
+        <th>Size</th>
+        <th>Quantity</th>
+        <th>Rate (${currency})</th>
+        <th>Amount (${currency})</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
 
-<br>
+  <table class="totals">
+    <tr>
+      <td>Net Amount (${currency})</td>
+      <td class="text-right">${formatNumber(invoice.net_amount)}</td>
+    </tr>
+    <tr>
+      <td>5% VAT</td>
+      <td class="text-right">${formatNumber(invoice.vat_amount)}</td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td class="text-right">${formatNumber(invoice.total_amount)}</td>
+    </tr>
+  </table>
 
-<table>
-<thead>
-<tr>
-<th>S.No</th><th>Description</th><th>Size</th>
-<th>Qty</th><th>Rate ${currency}</th><th>Amount ${currency}</th>
-</tr>
-</thead>
-<tbody>
-${rows}
-</tbody>
-</table>
+  <div class="footer">
+    <p>Amount in Words: ${numberToWords(invoice.total_amount, invoice.region)}</p>
 
-<table>
-<tr><td class="right">Net Amount</td><td class="right">${formatNumber(invoice.net_amount)} ${currency}</td></tr>
-<tr><td class="right">5% VAT</td><td class="right">${formatNumber(invoice.vat_amount)} ${currency}</td></tr>
-<tr><td class="right"><strong>Total</strong></td><td class="right"><strong>${formatNumber(invoice.total_amount)} ${currency}</strong></td></tr>
-</table>
+    <div class="signature">
+      Confirmed by: Shaji Mohammed Khan<br>
+      Signature: ____________________
+    </div>
 
-<p>Amount in Words: ${numberToWords(invoice.total_amount, invoice.region)}</p>
+    <div class="bank">
+      <strong>Bank Details:</strong><br>
+      ADCB BANK<br>
+      Account Name: 7 Star International Events LLC SHJ BR<br>
+      IBAN: AE020300012980065820001<br>
+      A/C No: 12980065820001<br>
+      Swift Code: ADCBAEAA<br>
+      Branch: Abu Dhabi Main Branch
+    </div>
+  </div>
 
-<p>
-Confirmed by: Shaji Mohammed Khan<br>
-Signature: ____________
-</p>
-
-<p>
-<strong>Bank Details:</strong><br>
-ADCB BANK<br>
-IBAN: AE020030012980065820001
-</p>
-
+  <div class="bottom-bar">
+    <div class="footer-left">NAD AL HAMMAR, DUBAI, UAE.</div>
+    <div class="footer-center">info@7starinternational.com</div>
+    <div class="footer-right">+971 56 506 5566</div>
+  </div>
+</div>
 </body>
 </html>`;
 
