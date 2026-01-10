@@ -3,57 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <title>7 Star Tax Invoice</title>
-
 <style>
-@page { size: A4; margin: 20mm; }
-body { font-family: Arial, sans-serif; font-size: 12px; color: #000; margin: 0; padding: 20px; }
-.invoice { width: 100%; }
-
-.header { display: flex; justify-content: space-between; }
-.logo { font-size: 22px; font-weight: bold; color: #c00000; }
-.company-details { text-align: right; font-size: 11px; }
-
-.title { text-align: center; font-size: 20px; font-weight: bold; margin: 15px 0 5px; }
-.green-bar { background: #cfe5b3; height: 25px; margin-bottom: 12px; }
-
-.info { display: flex; justify-content: space-between; margin-bottom: 10px; }
-.info div { width: 48%; }
-
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-table, th, td { border: 1px solid #000; }
-th { background: #e6e6e6; padding: 6px; text-align: center; }
-td { padding: 6px; height: 28px; }
-
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-
-.totals { width: 40%; margin-left: auto; margin-top: 10px; }
-.totals td { background: #cfe5b3; font-weight: bold; }
-
-.footer { clear: both; margin-top: 25px; font-size: 11px; }
-.signature { margin-top: 15px; }
-.bank { margin-top: 15px; }
-
-.bottom-bar {
-  background: #cfe5b3;
-  padding: 6px 10px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 10.5px;
-  font-weight: bold;
-  margin-top: 30px;
+@page { size: A4; margin: 18mm; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 12px; color:#000; margin: 0; padding: 0; }
+.wrapper { width:100%; }
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
 }
-.footer-left, .footer-center, .footer-right { width: 33%; }
-.footer-center { text-align: center; }
-.footer-right { text-align: right; }
+.logo {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.logo img { height:60px; }
+.company-name {
+  font-size:20px;
+  font-weight:bold;
+  color:#c00000;
+}
+.company {
+  text-align:right;
+  font-size:11px;
+}
+.title {
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  margin:10px 0;
+}
+.green-bar {
+  background:#cfe5b3;
+  height:22px;
+  margin-bottom:10px;
+}
+.info {
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  margin-bottom:6px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+table, th, td {
+  border:1px solid #000;
+}
+th {
+  background:#e6e6e6;
+  padding:5px;
+  text-align:center;
+}
+td {
+  padding:4px;
+  height:26px;
+}
+.green-col {
+  background:#cfe5b3;
+  font-weight:bold;
+}
+.text-right { text-align:right; }
+.text-center { text-align:center; }
+.totals {
+  width:32%;
+  float:right;
+  margin-top:10px;
+  border:2px solid #000;
+}
+.totals td {
+  background:#cfe5b3;
+  padding:8px;
+  font-weight:bold;
+}
+.footer {
+  clear:both;
+  font-size:11px;
+  margin-top:15px;
+}
+.bottom-bar {
+  position:fixed;
+  bottom:12mm;
+  left:18mm;
+  right:18mm;
+  background:#cfe5b3;
+  padding:6px;
+  font-size:10.5px;
+  font-weight:bold;
+  display:flex;
+  justify-content:space-between;
+}
 </style>
 </head>
 <body>
-
-<div class="invoice">
+<div class="wrapper">
   <div class="header">
-    <div class="logo">7 STAR INTERNATIONAL EVENTS L.L.C</div>
-    <div class="company-details">
+    <div class="logo">
+      <img src="logo.jpeg" alt="Logo" onerror="this.style.display='none'">
+      <span class="company-name">7 STAR INTERNATIONAL EVENTS L.L.C</span>
+    </div>
+    <div class="company">
       P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
       SAIH SHUBAIB 3<br>
       DUBAI - UAE
@@ -66,24 +116,25 @@ td { padding: 6px; height: 28px; }
   <div class="info">
     <div>
       Invoice Date: {{INVOICE_DATE}}<br>
-      Invoice Number: {{INVOICE_NO}}<br>
-      VAT TRN: 104038790200003
+      Invoice Number: {{INVOICE_NO}}
     </div>
     <div>
-      <strong>Client:</strong><br>
+      <b>Client:</b><br>
       {{CLIENT_NAME}}
     </div>
   </div>
 
+  <div style="font-size:11px; margin-bottom:6px;">VAT TRN: 104038790200003</div>
+
   <table>
     <thead>
       <tr>
-        <th>S.No</th>
-        <th>Description</th>
-        <th>Size</th>
-        <th>Quantity</th>
-        <th>Rate (AED)</th>
-        <th>Amount (AED)</th>
+        <th style="width:6%;">S.No</th>
+        <th style="width:34%;">Description</th>
+        <th style="width:8%;">Size</th>
+        <th style="width:10%;">Quantity</th>
+        <th style="width:16%;">Rate AED</th>
+        <th style="width:16%;" class="green-col">Amount AED</th>
       </tr>
     </thead>
     <tbody>
@@ -108,29 +159,23 @@ td { padding: 6px; height: 28px; }
 
   <div class="footer">
     <p>Amount in Words: {{AMOUNT_WORDS}}</p>
-
-    <div class="signature">
-      Confirmed by: Shaji Mohammed Khan<br>
-      Signature: ____________________
-    </div>
-
-    <div class="bank">
-      <strong>Bank Details:</strong><br>
+    <p>Confirmed by: Shaji Mohammed Khan<br>Signature: ____________________</p>
+    <p>
+      <b>Bank Details:</b><br>
       ADCB BANK<br>
       Account Name: 7 Star International Events LLC SHJ BR<br>
       IBAN: AE020300012980065820001<br>
       A/C No: 12980065820001<br>
       Swift Code: ADCBAEAA<br>
       Branch: Abu Dhabi Main Branch
-    </div>
+    </p>
   </div>
 
   <div class="bottom-bar">
-    <div class="footer-left">NAD AL HAMMAR, DUBAI, UAE.</div>
-    <div class="footer-center">info@7starinternational.com</div>
-    <div class="footer-right">+971 56 506 5566</div>
+    <div>NAD AL HAMMAR, DUBAI, UAE.</div>
+    <div>info@7starinternational.com</div>
+    <div>+971 56 506 5566</div>
   </div>
 </div>
-
 </body>
 </html>
