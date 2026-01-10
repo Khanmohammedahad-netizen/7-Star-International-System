@@ -126,128 +126,57 @@ serve(async (req) => {
       `).join('');
 
       html = `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>7 Star Quotation</title>
+<title>Quotation</title>
 <style>
-@page { size: A4; margin: 18mm; }
-body {
-  font-family: Calibri, Arial, sans-serif;
-  font-size: 12px;
-  color: #000;
-  margin: 0;
-  padding: 0;
+html, body { width:210mm; margin:0; }
+@page { size:A4; margin:18mm; }
+body { font-family:Calibri, Arial; font-size:12px; }
+.page {
+  width:174mm;
+  height:261mm;
+  position:relative;
 }
-.wrapper {
-  width: 100%;
-  min-height: 260mm;
+.page-break { page-break-after: always; }
+.green { background:#cfe5b3; padding:6px; font-weight:bold; }
+.footer-bar {
+  position:absolute; bottom:0; left:0; right:0;
+  background:#cfe5b3; padding:6px;
+  display:flex; justify-content:space-between;
+  font-size:10.5px;
 }
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
 }
-.logo img {
-  height: 70px;
-}
+.logo img { height: 65px; }
 .company {
   text-align: right;
   font-size: 11px;
-}
-.company b {
-  font-size: 14px;
 }
 .title {
   text-align: center;
   font-size: 20px;
   font-weight: bold;
-  margin: 8px 0;
-}
-.green-bar {
-  background: #cfe5b3;
-  padding: 6px;
-  font-weight: bold;
-  text-align: center;
   margin: 6px 0;
 }
-.green-row {
-  background: #cfe5b3;
-  padding: 6px;
-  font-weight: bold;
-}
-.info {
-  font-size: 11px;
-  margin-top: 6px;
-}
-.info div {
-  margin: 3px 0;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-table, th, td {
-  border: 1px solid #000;
-}
-th {
-  background: #e6e6e6;
-  padding: 5px;
-  text-align: center;
-}
-td {
-  padding: 4px;
-  height: 26px;
-}
-.green-col {
-  background: #cfe5b3;
-  font-weight: bold;
-}
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-.terms {
-  font-size: 11px;
-  line-height: 1.6;
-  margin-top: 8px;
-}
-.bank {
-  font-size: 11px;
-  line-height: 1.6;
-  margin-top: 8px;
-}
+.info { font-size: 11px; margin: 6px 0; }
+.terms { font-size: 11px; line-height: 1.6; }
+.bank { font-size: 11px; line-height: 1.6; }
 .approval {
   margin-top: 30px;
   display: flex;
   justify-content: space-between;
   font-size: 11px;
 }
-.footer-bar {
-  position: fixed;
-  bottom: 12mm;
-  left: 18mm;
-  right: 18mm;
-  background: #cfe5b3;
-  padding: 6px;
-  font-size: 10.5px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-}
-.totals-table {
-  width: 40%;
-  margin-left: auto;
-  margin-top: 10px;
-  border: 2px solid #000;
-}
-.totals-table td {
-  background: #cfe5b3;
-  padding: 8px;
-  font-weight: bold;
-}
 </style>
 </head>
 <body>
-<div class="wrapper">
+
+<!-- PAGE 1: Dynamic content -->
+<div class="page page-break">
   <div class="header">
     <div class="logo">
       <img src="https://ybgxfnykoqaggytachnv.supabase.co/storage/v1/object/public/assets/logo.jpeg" alt="Logo" onerror="this.style.display='none'">
@@ -255,33 +184,32 @@ td {
     <div class="company">
       <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
       P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-      SAIH SHUBAIB 3<br>
-      DUBAI - UAE
+      SAIH SHUBAIB 3<br>DUBAI - UAE
     </div>
   </div>
 
   <div class="title">Quotation</div>
 
   <div class="info">
-    <div><b>CLIENT :</b> ${quotation.clients?.name || ''}</div>
-    <div><b>Element :</b> ${quotation.element || '-'}</div>
+    <div>CLIENT: ${quotation.clients?.name || ''}</div>
+    <div>Element: ${quotation.element || '-'}</div>
   </div>
 
-  <div class="info">
-    <div class="green-row">Quotation Date : ${formatDate(quotation.quotation_date)}</div>
-    <div class="green-row">Quotation Number : ${quotation.quotation_number}</div>
-    <div class="green-row">VAT TRN : 104038790200003</div>
+  <div class="green">
+    <div>Date: ${formatDate(quotation.quotation_date)}</div>
+    <div>Quotation No: ${quotation.quotation_number}</div>
+    <div>VAT TRN: 104038790200003</div>
   </div>
 
-  <table style="margin-top: 10px;">
+  <table style="width:100%; border-collapse:collapse; margin-top:8px;">
     <thead>
       <tr>
-        <th style="width:6%;">S.No</th>
-        <th style="width:34%;">Description</th>
-        <th style="width:8%;">Size</th>
-        <th style="width:10%;">Quantity</th>
-        <th style="width:16%;">Rate ${currency}</th>
-        <th style="width:16%;" class="green-col">Amount ${currency}</th>
+        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:6%;">S.No</th>
+        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:34%;">Description</th>
+        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:8%;">Size</th>
+        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:10%;">Qty</th>
+        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:16%;">Rate ${currency}</th>
+        <th style="border:1px solid #000; background:#cfe5b3; padding:5px; width:16%; font-weight:bold;">Amount ${currency}</th>
       </tr>
     </thead>
     <tbody>
@@ -290,65 +218,67 @@ td {
     </tbody>
   </table>
 
-  <table class="totals-table">
+  <table style="width:40%; margin-left:auto; margin-top:10px; border:2px solid #000;">
     <tr>
-      <td>Net Amount (${currency})</td>
-      <td class="text-right">${formatNumber(quotation.net_amount)}</td>
+      <td style="background:#cfe5b3; padding:6px; font-weight:bold;">Net (${currency})</td>
+      <td style="background:#cfe5b3; padding:6px; font-weight:bold; text-align:right;">${formatNumber(quotation.net_amount)}</td>
     </tr>
     <tr>
-      <td>5% VAT</td>
-      <td class="text-right">${formatNumber(quotation.vat_amount)}</td>
+      <td style="background:#cfe5b3; padding:6px; font-weight:bold;">5% VAT</td>
+      <td style="background:#cfe5b3; padding:6px; font-weight:bold; text-align:right;">${formatNumber(quotation.vat_amount)}</td>
     </tr>
     <tr>
-      <td>Total</td>
-      <td class="text-right">${formatNumber(quotation.total_amount)}</td>
+      <td style="background:#cfe5b3; padding:6px; font-weight:bold;">Total</td>
+      <td style="background:#cfe5b3; padding:6px; font-weight:bold; text-align:right;">${formatNumber(quotation.total_amount)}</td>
     </tr>
   </table>
 
-  <div class="green-bar">Terms & Conditions</div>
+  <div class="footer-bar">
+    <span>NAD AL HAMMAR, DUBAI</span>
+    <span>ShajiKhan@7starinternational.com</span>
+    <span>00971 56 506 5566</span>
+  </div>
+</div>
+
+<!-- PAGE 2: Static content (terms, bank, signatures) -->
+<div class="page">
+  <div class="green" style="text-align:center; margin-bottom:10px;">Terms & Conditions</div>
 
   <div class="terms">
-    • Any Change in working drawings should be given before the fabrication has started<br>
-    • Any Change in size will have cost implications<br>
-    • Any NOC's from Municipality, Horticulture & DEWA/SEWA/FEWA are additions costs as per actuals.<br>
-    • Economic Department approvals to be obtained by 7 Star International fees to be paid by Client.<br>
-    • All site Utilities (Water, Electrical and Telephone) to be provided by Client.<br>
-    • Enclosed storage area to be provided by client for storing the finished work till the time of Installation.<br>
-    • Variation to any of the above information must be confirmed in writing by the officials.<br>
-    • Payment Terms 50% advance along with order confirmation and 50% upon completion of project.<br>
-    • The payment will be accepted only via Transfer & Cheques to our Bank Account.
+    • Any change in drawings before fabrication only<br>
+    • Any size change affects cost<br>
+    • NOC & approvals extra as actuals<br>
+    • Utilities by client<br>
+    • Payment 50% advance, 50% on completion<br>
+    • Payment via bank transfer / cheque only
   </div>
 
-  <div class="green-bar">Bank Details</div>
+  <div class="green" style="text-align:center; margin:20px 0 10px;">Bank Details</div>
 
   <div class="bank">
-    • ADCB BANK<br>
-    • Account name - 7 Star International Events LLC SHJ BR<br>
-    • Iban - AE020300012980065820001<br>
-    • A/c no - 12980065820001<br>
-    • Swiftcode - ADCBAEAA<br>
-    • Branch - Abu Dhabi Main Branch
+    ADCB BANK<br>
+    Account: 7 Star International Events LLC SHJ BR<br>
+    IBAN: AE020300012980065820001<br>
+    Swift: ADCBAEAA
   </div>
 
   <div class="approval">
     <div>
       <b>7 Star International Events LLC</b><br>
-      Approved by : Shaji Mohammed Khan<br>
-      Signature :
+      Approved by: Shaji Mohammed Khan
     </div>
     <div>
       <b>Client</b><br>
-      Approved by :<br>
-      Signature :
+      Signature:
     </div>
   </div>
 
   <div class="footer-bar">
-    <div>NAD AL HAMMAR, DUBAI, UAE.</div>
-    <div>ShajiKhan@7StarInternational.com</div>
-    <div>00971 56 506 5566</div>
+    <span>Quotation Date: ${formatDate(quotation.quotation_date)}</span>
+    <span>Quotation No: ${quotation.quotation_number}</span>
   </div>
 </div>
+
 </body>
 </html>`;
 
@@ -371,132 +301,122 @@ td {
             <td class="text-center">${item.size || '-'}</td>
             <td class="text-center">${item.quantity}</td>
             <td class="text-right">${formatNumber(item.rate)}</td>
-            <td class="text-right green-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
+            <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
           </tr>
         `).join('');
 
-      // Generate empty rows to fill the table (8 empty rows to match Excel layout)
-      const emptyRowCount = Math.max(0, 8 - invoice.invoice_items.length);
-      const emptyRows = Array(emptyRowCount).fill(`
-        <tr>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td class="green-col">&nbsp;</td>
-        </tr>
-      `).join('');
-
       html = `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>7 Star Tax Invoice</title>
+<title>Tax Invoice</title>
 <style>
+html, body {
+  width: 210mm;
+  height: 297mm;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
 @page { size: A4; margin: 18mm; }
-body { font-family: Calibri, Arial, sans-serif; font-size: 12px; color:#000; margin: 0; padding: 0; }
-.wrapper { width:100%; }
+body {
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 12px;
+}
+.page {
+  width: 174mm;
+  height: 261mm;
+  position: relative;
+}
 .header {
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
+  display: flex;
+  justify-content: space-between;
 }
-.logo {
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.logo img { height:60px; }
-.company-name {
-  font-size:20px;
-  font-weight:bold;
-  color:#c00000;
-}
+.logo img { height: 65px; }
 .company {
-  text-align:right;
-  font-size:11px;
+  text-align: right;
+  font-size: 11px;
 }
 .title {
-  text-align:center;
-  font-size:20px;
-  font-weight:bold;
-  margin:10px 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 6px 0;
 }
 .green-bar {
-  background:#cfe5b3;
-  height:22px;
-  margin-bottom:10px;
+  height: 22px;
+  background: #cfe5b3;
+  margin-bottom: 8px;
 }
 .info {
-  display:flex;
-  justify-content:space-between;
-  font-size:11px;
-  margin-bottom:6px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
 }
 table {
-  width:100%;
-  border-collapse:collapse;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
 }
 table, th, td {
-  border:1px solid #000;
+  border: 1px solid #000;
 }
 th {
-  background:#e6e6e6;
-  padding:5px;
-  text-align:center;
+  background: #e6e6e6;
+  padding: 5px;
 }
 td {
-  padding:4px;
-  height:26px;
+  height: 26px;
+  padding: 4px;
 }
-.green-col {
-  background:#cfe5b3;
-  font-weight:bold;
+.amount-col {
+  background: #cfe5b3;
+  font-weight: bold;
 }
-.text-right { text-align:right; }
-.text-center { text-align:center; }
+.items {
+  height: 420px;
+}
+.text-right { text-align: right; }
+.text-center { text-align: center; }
 .totals {
-  width:32%;
-  float:right;
-  margin-top:10px;
-  border:2px solid #000;
+  width: 32%;
+  position: absolute;
+  right: 0;
+  bottom: 90px;
 }
 .totals td {
-  background:#cfe5b3;
-  padding:8px;
-  font-weight:bold;
+  background: #cfe5b3;
+  font-weight: bold;
+  padding: 6px;
 }
 .footer {
-  clear:both;
-  font-size:11px;
-  margin-top:15px;
+  position: absolute;
+  bottom: 40px;
+  font-size: 11px;
 }
-.bottom-bar {
-  position:fixed;
-  bottom:12mm;
-  left:18mm;
-  right:18mm;
-  background:#cfe5b3;
-  padding:6px;
-  font-size:10.5px;
-  font-weight:bold;
-  display:flex;
-  justify-content:space-between;
+.footer-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #cfe5b3;
+  padding: 6px;
+  font-size: 10.5px;
+  display: flex;
+  justify-content: space-between;
 }
 </style>
 </head>
 <body>
-<div class="wrapper">
+<div class="page">
   <div class="header">
     <div class="logo">
       <img src="https://ybgxfnykoqaggytachnv.supabase.co/storage/v1/object/public/assets/logo.jpeg" alt="Logo" onerror="this.style.display='none'">
-      <span class="company-name">7 STAR INTERNATIONAL EVENTS L.L.C</span>
     </div>
     <div class="company">
+      <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
       P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-      SAIH SHUBAIB 3<br>
-      DUBAI - UAE
+      SAIH SHUBAIB 3<br>DUBAI - UAE
     </div>
   </div>
 
@@ -506,7 +426,8 @@ td {
   <div class="info">
     <div>
       Invoice Date: ${formatDate(invoice.invoice_date)}<br>
-      Invoice Number: ${invoice.invoice_number}
+      Invoice No: ${invoice.invoice_number}<br>
+      VAT TRN: 104038790200003
     </div>
     <div>
       <b>Client:</b><br>
@@ -514,28 +435,25 @@ td {
     </div>
   </div>
 
-  <div style="font-size:11px; margin-bottom:6px;">VAT TRN: 104038790200003</div>
-
-  <table>
+  <table class="items">
     <thead>
       <tr>
         <th style="width:6%;">S.No</th>
         <th style="width:34%;">Description</th>
         <th style="width:8%;">Size</th>
-        <th style="width:10%;">Quantity</th>
-        <th style="width:16%;">Rate ${currency}</th>
-        <th style="width:16%;" class="green-col">Amount ${currency}</th>
+        <th style="width:10%;">Qty</th>
+        <th style="width:16%;">Rate</th>
+        <th style="width:16%;" class="amount-col">Amount</th>
       </tr>
     </thead>
     <tbody>
       ${rows}
-      ${emptyRows}
     </tbody>
   </table>
 
   <table class="totals">
     <tr>
-      <td>Net Amount (${currency})</td>
+      <td>Net</td>
       <td class="text-right">${formatNumber(invoice.net_amount)}</td>
     </tr>
     <tr>
@@ -549,23 +467,14 @@ td {
   </table>
 
   <div class="footer">
-    <p>Amount in Words: ${numberToWords(invoice.total_amount, invoice.region)}</p>
-    <p>Confirmed by: Shaji Mohammed Khan<br>Signature: ____________________</p>
-    <p>
-      <b>Bank Details:</b><br>
-      ADCB BANK<br>
-      Account Name: 7 Star International Events LLC SHJ BR<br>
-      IBAN: AE020300012980065820001<br>
-      A/C No: 12980065820001<br>
-      Swift Code: ADCBAEAA<br>
-      Branch: Abu Dhabi Main Branch
-    </p>
+    Confirmed by: Shaji Mohammed Khan<br>
+    Signature: ____________________
   </div>
 
-  <div class="bottom-bar">
-    <div>NAD AL HAMMAR, DUBAI, UAE.</div>
-    <div>info@7starinternational.com</div>
-    <div>+971 56 506 5566</div>
+  <div class="footer-bar">
+    <span>NAD AL HAMMAR, DUBAI, UAE</span>
+    <span>info@7starinternational.com</span>
+    <span>+971 56 506 5566</span>
   </div>
 </div>
 </body>
