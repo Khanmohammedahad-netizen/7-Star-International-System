@@ -122,7 +122,7 @@ export default function PersonalAccounts() {
     </Card>
   );
 
-  const FormFields = () => (
+  const formFields = (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -130,7 +130,7 @@ export default function PersonalAccounts() {
           <Input
             type="date"
             value={formData.entry_date}
-            onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
+            onChange={(e) => setFormData(prev => ({ ...prev, entry_date: e.target.value }))}
             required
           />
         </div>
@@ -138,7 +138,7 @@ export default function PersonalAccounts() {
           <Label>Mode of Payment</Label>
           <Select
             value={formData.mode_of_payment}
-            onValueChange={(value) => setFormData({ ...formData, mode_of_payment: value as any })}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, mode_of_payment: value as any }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -158,7 +158,7 @@ export default function PersonalAccounts() {
         <Label>Description *</Label>
         <Textarea
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
           required
         />
       </div>
@@ -169,7 +169,7 @@ export default function PersonalAccounts() {
           <Input
             type="number"
             value={formData.credit}
-            onChange={(e) => setFormData({ ...formData, credit: parseFloat(e.target.value) || 0 })}
+            onChange={(e) => setFormData(prev => ({ ...prev, credit: parseFloat(e.target.value) || 0 }))}
             min={0}
             step="0.01"
           />
@@ -179,7 +179,7 @@ export default function PersonalAccounts() {
           <Input
             type="number"
             value={formData.debit}
-            onChange={(e) => setFormData({ ...formData, debit: parseFloat(e.target.value) || 0 })}
+            onChange={(e) => setFormData(prev => ({ ...prev, debit: parseFloat(e.target.value) || 0 }))}
             min={0}
             step="0.01"
           />
@@ -190,7 +190,7 @@ export default function PersonalAccounts() {
         <Label>Remarks</Label>
         <Textarea
           value={formData.remarks}
-          onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
         />
       </div>
     </div>
@@ -219,7 +219,7 @@ export default function PersonalAccounts() {
               <DialogTitle>New Personal Account Entry</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <FormFields />
+              {formFields}
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                   Cancel
@@ -336,7 +336,7 @@ export default function PersonalAccounts() {
                               <DialogTitle>Edit Entry</DialogTitle>
                             </DialogHeader>
                             <form onSubmit={handleSubmit} className="space-y-4">
-                              <FormFields />
+                              {formFields}
                               <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" onClick={() => setEditingAccount(null)}>
                                   Cancel

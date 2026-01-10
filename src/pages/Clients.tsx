@@ -149,7 +149,7 @@ export default function Clients() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       required
                     />
                   </div>
@@ -158,7 +158,7 @@ export default function Clients() {
                     <Input
                       id="company_name"
                       value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -166,7 +166,7 @@ export default function Clients() {
                     <Input
                       id="representative_name"
                       value={formData.representative_name}
-                      onChange={(e) => setFormData({ ...formData, representative_name: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, representative_name: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -174,7 +174,7 @@ export default function Clients() {
                     <Input
                       id="representative_phone"
                       value={formData.representative_phone}
-                      onChange={(e) => setFormData({ ...formData, representative_phone: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, representative_phone: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -183,7 +183,7 @@ export default function Clients() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     />
                   </div>
                   {isSuperAdmin && (
@@ -191,7 +191,7 @@ export default function Clients() {
                       <Label htmlFor="region">Region</Label>
                       <Select
                         value={formData.region}
-                        onValueChange={(value) => setFormData({ ...formData, region: value as any })}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, region: value as any }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -209,7 +209,7 @@ export default function Clients() {
                   <Textarea
                     id="address"
                     value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                   />
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">

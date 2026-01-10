@@ -151,7 +151,7 @@ export default function Payments() {
     </Card>
   );
 
-  const FormFields = () => (
+  const formFields = (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -177,7 +177,7 @@ export default function Payments() {
           <Input
             type="date"
             value={formData.payment_date}
-            onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+            onChange={(e) => setFormData(prev => ({ ...prev, payment_date: e.target.value }))}
             required
           />
         </div>
@@ -186,7 +186,7 @@ export default function Payments() {
           <Input
             type="number"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+            onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
             min={0}
             step="0.01"
             required
@@ -196,7 +196,7 @@ export default function Payments() {
           <Label>Payment Mode *</Label>
           <Select
             value={formData.payment_mode}
-            onValueChange={(value) => setFormData({ ...formData, payment_mode: value as any })}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, payment_mode: value as any }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -214,7 +214,7 @@ export default function Payments() {
           <Label>Reference Number</Label>
           <Input
             value={formData.reference_number}
-            onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
+            onChange={(e) => setFormData(prev => ({ ...prev, reference_number: e.target.value }))}
             placeholder="Transaction/Check number"
           />
         </div>
@@ -223,7 +223,7 @@ export default function Payments() {
             <Label>Region</Label>
             <Select
               value={formData.region}
-              onValueChange={(value) => setFormData({ ...formData, region: value as any })}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, region: value as any }))}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -240,7 +240,7 @@ export default function Payments() {
         <Label>Notes</Label>
         <Textarea
           value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
         />
       </div>
     </div>
@@ -314,7 +314,7 @@ export default function Payments() {
                   <DialogTitle>Record Payment</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <FormFields />
+                  {formFields}
                   <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                       Cancel
@@ -401,7 +401,7 @@ export default function Payments() {
                                 <DialogTitle>Edit Payment</DialogTitle>
                               </DialogHeader>
                               <form onSubmit={handleSubmit} className="space-y-4">
-                                <FormFields />
+                                {formFields}
                                 <div className="flex justify-end gap-2">
                                   <Button type="button" variant="outline" onClick={() => setEditingPayment(null)}>
                                     Cancel
