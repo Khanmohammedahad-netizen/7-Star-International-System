@@ -574,13 +574,45 @@ export default function Events() {
               selectedVendorIds={selectedVendorIds}
               onVendorSelectionChange={setSelectedVendorIds}
             />
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updateEvent.isPending}>
-                {updateEvent.isPending ? 'Saving...' : 'Save Changes'}
-              </Button>
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-2 pt-4 border-t">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" className="gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Delete Event
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{editingEvent?.title}"? This action cannot be undone and will remove all associated materials and vendor links.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        if (editingEvent) {
+                          deleteEvent.mutate(editingEvent.id);
+                          setEditingEvent(null);
+                        }
+                      }}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateEvent.isPending}>
+                  {updateEvent.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           </form>
         </DialogContent>
