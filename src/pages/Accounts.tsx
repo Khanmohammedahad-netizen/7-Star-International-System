@@ -168,7 +168,7 @@ export default function Accounts() {
     </Card>
   );
 
-  const FormContent = () => (
+  const formContent = (
     <form onSubmit={handleSubmit}>
       <ScrollArea className="max-h-[70vh] pr-4">
         <div className="space-y-4">
@@ -178,7 +178,7 @@ export default function Accounts() {
               <Input
                 type="date"
                 value={formData.entry_date}
-                onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, entry_date: e.target.value }))}
                 required
               />
             </div>
@@ -186,21 +186,21 @@ export default function Accounts() {
               <Label>Project Name</Label>
               <Input
                 value={formData.project_name}
-                onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, project_name: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
               <Label>Expense Head</Label>
               <Input
                 value={formData.expense_head}
-                onChange={(e) => setFormData({ ...formData, expense_head: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, expense_head: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
               <Label>Person Responsible</Label>
               <Input
                 value={formData.person_responsible}
-                onChange={(e) => setFormData({ ...formData, person_responsible: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, person_responsible: e.target.value }))}
               />
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function Accounts() {
             <Label>Description</Label>
             <Textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             />
           </div>
 
@@ -219,7 +219,7 @@ export default function Accounts() {
               <Input
                 type="number"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
                 min={0}
                 step="0.01"
               />
@@ -229,7 +229,7 @@ export default function Accounts() {
               <Input
                 type="number"
                 value={formData.vat}
-                onChange={(e) => setFormData({ ...formData, vat: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => setFormData(prev => ({ ...prev, vat: parseFloat(e.target.value) || 0 }))}
                 min={0}
                 step="0.01"
               />
@@ -248,7 +248,7 @@ export default function Accounts() {
                 <Input
                   type="number"
                   value={formData.e7_bank_transfer}
-                  onChange={(e) => setFormData({ ...formData, e7_bank_transfer: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, e7_bank_transfer: parseFloat(e.target.value) || 0 }))}
                   min={0}
                   step="0.01"
                 />
@@ -258,7 +258,7 @@ export default function Accounts() {
                 <Input
                   type="number"
                   value={formData.e7_cash}
-                  onChange={(e) => setFormData({ ...formData, e7_cash: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, e7_cash: parseFloat(e.target.value) || 0 }))}
                   min={0}
                   step="0.01"
                 />
@@ -268,7 +268,7 @@ export default function Accounts() {
                 <Input
                   type="number"
                   value={formData.shaji_bank_transfer}
-                  onChange={(e) => setFormData({ ...formData, shaji_bank_transfer: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shaji_bank_transfer: parseFloat(e.target.value) || 0 }))}
                   min={0}
                   step="0.01"
                 />
@@ -278,7 +278,7 @@ export default function Accounts() {
                 <Input
                   type="number"
                   value={formData.shaji_cash}
-                  onChange={(e) => setFormData({ ...formData, shaji_cash: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shaji_cash: parseFloat(e.target.value) || 0 }))}
                   min={0}
                   step="0.01"
                 />
@@ -288,7 +288,7 @@ export default function Accounts() {
                 <Input
                   type="number"
                   value={formData.shaji_credit_card}
-                  onChange={(e) => setFormData({ ...formData, shaji_credit_card: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shaji_credit_card: parseFloat(e.target.value) || 0 }))}
                   min={0}
                   step="0.01"
                 />
@@ -298,7 +298,7 @@ export default function Accounts() {
                 <Input
                   type="number"
                   value={formData.others}
-                  onChange={(e) => setFormData({ ...formData, others: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, others: parseFloat(e.target.value) || 0 }))}
                   min={0}
                   step="0.01"
                 />
@@ -311,7 +311,7 @@ export default function Accounts() {
               <Checkbox
                 id="invoice_available"
                 checked={formData.invoice_available}
-                onCheckedChange={(checked) => setFormData({ ...formData, invoice_available: checked as boolean })}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, invoice_available: checked as boolean }))}
               />
               <Label htmlFor="invoice_available">Invoice Available</Label>
             </div>
@@ -320,7 +320,7 @@ export default function Accounts() {
                 <Input
                   type="date"
                   value={formData.invoice_date}
-                  onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, invoice_date: e.target.value }))}
                   placeholder="Invoice Date"
                 />
               </div>
@@ -331,7 +331,7 @@ export default function Accounts() {
             <Label>Remarks</Label>
             <Textarea
               value={formData.remarks}
-              onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
             />
           </div>
         </div>
@@ -365,7 +365,7 @@ export default function Accounts() {
               <DialogHeader>
                 <DialogTitle>New Account Entry</DialogTitle>
               </DialogHeader>
-              <FormContent />
+              {formContent}
             </DialogContent>
           </Dialog>
         )}
@@ -443,7 +443,7 @@ export default function Accounts() {
                                 <DialogHeader>
                                   <DialogTitle>Edit Account Entry</DialogTitle>
                                 </DialogHeader>
-                                <FormContent />
+                                {formContent}
                               </DialogContent>
                             </Dialog>
                             <AlertDialog>

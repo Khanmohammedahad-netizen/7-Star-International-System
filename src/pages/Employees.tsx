@@ -154,13 +154,13 @@ export default function Employees() {
     </Card>
   );
 
-  const FormFields = () => (
+  const formFields = (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label>Full Name *</Label>
         <Input
           value={formData.full_name}
-          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
           required
         />
       </div>
@@ -168,7 +168,7 @@ export default function Employees() {
         <Label>Position</Label>
         <Input
           value={formData.position}
-          onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
@@ -176,21 +176,21 @@ export default function Employees() {
         <Input
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
         <Label>Phone</Label>
         <Input
           value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
         <Label>Emirates ID</Label>
         <Input
           value={formData.emirates_id}
-          onChange={(e) => setFormData({ ...formData, emirates_id: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, emirates_id: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
@@ -198,14 +198,14 @@ export default function Employees() {
         <Input
           type="date"
           value={formData.emirates_id_expiry}
-          onChange={(e) => setFormData({ ...formData, emirates_id_expiry: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, emirates_id_expiry: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
         <Label>Passport Number</Label>
         <Input
           value={formData.passport_number}
-          onChange={(e) => setFormData({ ...formData, passport_number: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, passport_number: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
@@ -213,14 +213,14 @@ export default function Employees() {
         <Input
           type="date"
           value={formData.passport_expiry}
-          onChange={(e) => setFormData({ ...formData, passport_expiry: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, passport_expiry: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
         <Label>Visa Number</Label>
         <Input
           value={formData.visa_number}
-          onChange={(e) => setFormData({ ...formData, visa_number: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, visa_number: e.target.value }))}
         />
       </div>
       <div className="space-y-2">
@@ -228,7 +228,7 @@ export default function Employees() {
         <Input
           type="date"
           value={formData.visa_expiry}
-          onChange={(e) => setFormData({ ...formData, visa_expiry: e.target.value })}
+          onChange={(e) => setFormData(prev => ({ ...prev, visa_expiry: e.target.value }))}
         />
       </div>
       {isSuperAdmin && (
@@ -236,7 +236,7 @@ export default function Employees() {
           <Label>Region</Label>
           <Select
             value={formData.region}
-            onValueChange={(value) => setFormData({ ...formData, region: value as any })}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, region: value as any }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -270,7 +270,7 @@ export default function Employees() {
                 <DialogTitle>Add New Employee</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <FormFields />
+                {formFields}
                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancel
@@ -372,7 +372,7 @@ export default function Employees() {
                                 <DialogTitle>Edit Employee</DialogTitle>
                               </DialogHeader>
                               <form onSubmit={handleSubmit} className="space-y-4">
-                                <FormFields />
+                                {formFields}
                                 <div className="flex justify-end gap-2">
                                   <Button type="button" variant="outline" onClick={() => setEditingEmployee(null)}>
                                     Cancel

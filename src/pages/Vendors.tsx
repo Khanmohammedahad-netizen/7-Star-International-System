@@ -375,7 +375,7 @@ export default function Vendors() {
                     <Label>Vendor Name *</Label>
                     <Input
                       value={formData.vendor_name}
-                      onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
                       required
                     />
                   </div>
@@ -383,7 +383,7 @@ export default function Vendors() {
                     <Label>Vendor Type *</Label>
                     <Select
                       value={formData.vendor_type}
-                      onValueChange={(v) => setFormData({ ...formData, vendor_type: v as VendorType })}
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, vendor_type: v as VendorType }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -399,7 +399,7 @@ export default function Vendors() {
                     <Label>Facilities Provided</Label>
                     <Input
                       value={formData.facilities_provided}
-                      onChange={(e) => setFormData({ ...formData, facilities_provided: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, facilities_provided: e.target.value }))}
                       placeholder="e.g., Tables, Chairs, Linens"
                     />
                   </div>
@@ -407,14 +407,14 @@ export default function Vendors() {
                     <Label>Representative Name</Label>
                     <Input
                       value={formData.representative_name}
-                      onChange={(e) => setFormData({ ...formData, representative_name: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, representative_name: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Representative Phone</Label>
                     <Input
                       value={formData.representative_phone}
-                      onChange={(e) => setFormData({ ...formData, representative_phone: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, representative_phone: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
@@ -422,42 +422,42 @@ export default function Vendors() {
                     <Input
                       type="email"
                       value={formData.representative_email}
-                      onChange={(e) => setFormData({ ...formData, representative_email: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, representative_email: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label>Address</Label>
                     <Input
                       value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>City</Label>
                     <Input
                       value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>State</Label>
                     <Input
                       value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Country</Label>
                     <Input
                       value={formData.country}
-                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Status</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(v) => setFormData({ ...formData, status: v as VendorStatus })}
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, status: v as VendorStatus }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -473,7 +473,7 @@ export default function Vendors() {
                       <Label>Region</Label>
                       <Select
                         value={formData.region}
-                        onValueChange={(v) => setFormData({ ...formData, region: v as Region })}
+                        onValueChange={(v) => setFormData(prev => ({ ...prev, region: v as Region }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -489,7 +489,7 @@ export default function Vendors() {
                     <Label>Notes</Label>
                     <Textarea
                       value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                       rows={3}
                     />
                   </div>
