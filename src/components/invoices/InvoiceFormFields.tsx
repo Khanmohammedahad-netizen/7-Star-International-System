@@ -1,4 +1,4 @@
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, CornerDownRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,13 +10,15 @@ import { ClientCombobox } from '@/components/ClientCombobox';
 import { Client } from '@/hooks/useClients';
 import { getCurrencyCode } from '@/lib/currency';
 
-interface InvoiceItem {
+export interface InvoiceItem {
   serial_no: number;
   description: string;
   size: string;
   quantity: number;
   rate: number;
   amount: number;
+  is_sub_item: boolean;
+  parent_serial_no: number | null;
 }
 
 interface InvoiceFormData {
@@ -39,8 +41,10 @@ interface InvoiceFormFieldsProps {
   items: InvoiceItem[];
   onItemChange: (index: number, field: keyof InvoiceItem, value: any) => void;
   onAddItem: () => void;
+  onAddSubItem: (parentIndex: number) => void;
   onRemoveItem: (index: number) => void;
   totals: { netAmount: number; vatAmount: number; totalAmount: number };
+  getDisplaySerialNo: (item: InvoiceItem, index: number) => string;
 }
 
 export function InvoiceFormFields({
@@ -54,9 +58,13 @@ export function InvoiceFormFields({
   items,
   onItemChange,
   onAddItem,
+  onAddSubItem,
   onRemoveItem,
   totals,
+  getDisplaySerialNo,
 }: InvoiceFormFieldsProps) {
+  // Helper to check if an item can have sub-items (only main items)
+  const canHaveSubItems = (item: InvoiceItem) => !item.is_sub_item;
   return (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -140,14 +148,24 @@ export function InvoiceFormFields({
         {/* Mobile-friendly line items */}
         <div className="space-y-4 sm:hidden">
           {items.map((item, index) => (
-            <Card key={index} className="p-3">
+            <Card key={index} className={`p-3 ${item.is_sub_item ? 'ml-4 border-l-2 border-primary/30' : ''}`}>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Item #{item.serial_no}</span>
-                {items.length > 1 && (
-                  <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveItem(index)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
+                <span className="text-sm font-medium">
+                  {item.is_sub_item && <CornerDownRight className="inline h-3 w-3 mr-1 text-muted-foreground" />}
+                  Item #{getDisplaySerialNo(item, index)}
+                </span>
+                <div className="flex gap-1">
+                  {canHaveSubItems(item) && (
+                    <Button type="button" variant="ghost" size="icon" onClick={() => onAddSubItem(index)} title="Add Sub-Item">
+                      <CornerDownRight className="h-4 w-4 text-primary" />
+                    </Button>
+                  )}
+                  {items.length > 1 && (
+                    <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveItem(index)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Textarea
@@ -209,8 +227,11 @@ export function InvoiceFormFields({
             </TableHeader>
             <TableBody>
               {items.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.serial_no}</TableCell>
+                <TableRow key={index} className={item.is_sub_item ? 'bg-muted/30' : ''}>
+                  <TableCell className={item.is_sub_item ? 'pl-6' : ''}>
+                    {item.is_sub_item && <CornerDownRight className="inline h-3 w-3 mr-1 text-muted-foreground" />}
+                    {getDisplaySerialNo(item, index)}
+                  </TableCell>
                   <TableCell>
                     <Textarea
                       value={item.description}
@@ -251,11 +272,18 @@ export function InvoiceFormFields({
                   </TableCell>
                   <TableCell className="font-medium">{item.amount.toFixed(2)}</TableCell>
                   <TableCell>
-                    {items.length > 1 && (
-                      <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveItem(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    )}
+                    <div className="flex gap-1">
+                      {canHaveSubItems(item) && (
+                        <Button type="button" variant="ghost" size="icon" onClick={() => onAddSubItem(index)} title="Add Sub-Item">
+                          <CornerDownRight className="h-4 w-4 text-primary" />
+                        </Button>
+                      )}
+                      {items.length > 1 && (
+                        <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveItem(index)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

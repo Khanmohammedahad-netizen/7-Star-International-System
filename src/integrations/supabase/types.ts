@@ -395,6 +395,8 @@ export type Database = {
           description: string
           id: string
           invoice_id: string
+          is_sub_item: boolean
+          parent_serial_no: number | null
           quantity: number
           rate: number
           serial_no: number
@@ -406,6 +408,8 @@ export type Database = {
           description: string
           id?: string
           invoice_id: string
+          is_sub_item?: boolean
+          parent_serial_no?: number | null
           quantity?: number
           rate: number
           serial_no: number
@@ -417,6 +421,8 @@ export type Database = {
           description?: string
           id?: string
           invoice_id?: string
+          is_sub_item?: boolean
+          parent_serial_no?: number | null
           quantity?: number
           rate?: number
           serial_no?: number

@@ -73,6 +73,8 @@ export function useCreateInvoice() {
           size: item.size || null,
           quantity: item.quantity,
           rate: item.rate,
+          is_sub_item: item.is_sub_item || false,
+          parent_serial_no: item.parent_serial_no || null,
         }));
         const { error: itemsError } = await supabase
           .from('invoice_items')
@@ -117,6 +119,8 @@ export function useUpdateInvoice() {
             size: item.size || null,
             quantity: item.quantity,
             rate: item.rate,
+            is_sub_item: item.is_sub_item || false,
+            parent_serial_no: item.parent_serial_no || null,
           }));
           const { error: itemsError } = await supabase
             .from('invoice_items')
