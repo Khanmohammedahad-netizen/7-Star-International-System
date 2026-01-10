@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, Search, Calendar as CalendarIcon, List, ChevronLeft, ChevronRight, Edit, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Plus, Search, Calendar as CalendarIcon, List, ChevronLeft, ChevronRight, Edit, Trash2, CheckCircle, XCircle, Clock, Store, Filter } from 'lucide-react';
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, useApproveEvent, Event } from '@/hooks/useEvents';
 import { useClients } from '@/hooks/useClients';
-import { useVendors, useEventVendors, useLinkVendorToEvent, useUnlinkVendorFromEvent } from '@/hooks/useVendors';
+import { useVendors, useAllEventVendors, useLinkVendorToEvent, useUnlinkVendorFromEvent } from '@/hooks/useVendors';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +11,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { EventFormFields } from '@/components/events/EventFormFields';
 import { EventControlCenter } from '@/components/events/EventControlCenter';
+import { VENDOR_TYPE_LABELS } from '@/types/database';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-500',
@@ -26,6 +28,7 @@ export default function Events() {
   const { data: events, isLoading } = useEvents();
   const { data: clients } = useClients();
   const { data: vendors } = useVendors();
+  const { data: allEventVendors } = useAllEventVendors();
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -33,6 +36,11 @@ export default function Events() {
   const linkVendor = useLinkVendorToEvent();
   const unlinkVendor = useUnlinkVendorFromEvent();
   const { userRole, isSuperAdmin, hasPermission } = useAuth();
+
+  // Helper to get vendors for an event
+  const getEventVendors = useCallback((eventId: string) => {
+    return allEventVendors?.filter(ev => ev.event_id === eventId) || [];
+  }, [allEventVendors]);
   
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar'); // Calendar first!
@@ -41,6 +49,7 @@ export default function Events() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
+  const [vendorFilter, setVendorFilter] = useState<string>('all');
   
   // Form state - kept at this level but with stable update function
   const [formData, setFormData] = useState({
@@ -56,10 +65,19 @@ export default function Events() {
   const [selectedVendorIds, setSelectedVendorIds] = useState<string[]>([]);
   const [editingVendorIds, setEditingVendorIds] = useState<string[]>([]);
 
-  const filteredEvents = events?.filter(event =>
-    event.title.toLowerCase().includes(search.toLowerCase()) ||
-    event.clients?.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter events by search and vendor
+  const filteredEvents = useMemo(() => {
+    return events?.filter(event => {
+      const matchesSearch = 
+        event.title.toLowerCase().includes(search.toLowerCase()) ||
+        event.clients?.name.toLowerCase().includes(search.toLowerCase());
+      
+      const matchesVendor = vendorFilter === 'all' || 
+        getEventVendors(event.id).some(ev => ev.vendor_id === vendorFilter);
+      
+      return matchesSearch && matchesVendor;
+    });
+  }, [events, search, vendorFilter, getEventVendors]);
 
   const resetForm = useCallback(() => {
     setFormData({
@@ -175,29 +193,47 @@ export default function Events() {
   }, [events]);
 
   // Mobile event card for list view
-  const EventCard = ({ event }: { event: Event }) => (
-    <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleEventClick(event)}>
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <p className="font-medium">{event.title}</p>
-          <p className="text-sm text-muted-foreground">{event.clients?.name}</p>
+  const EventCard = ({ event }: { event: Event }) => {
+    const eventVendors = getEventVendors(event.id);
+    return (
+      <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleEventClick(event)}>
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <p className="font-medium">{event.title}</p>
+            <p className="text-sm text-muted-foreground">{event.clients?.name}</p>
+          </div>
+          <Badge className={`${statusColors[event.status]} text-white`}>
+            {event.status}
+          </Badge>
         </div>
-        <Badge className={`${statusColors[event.status]} text-white`}>
-          {event.status}
-        </Badge>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <p className="text-muted-foreground">Date</p>
-          <p>{format(parseISO(event.event_date), 'MMM d, yyyy')}</p>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <p className="text-muted-foreground">Date</p>
+            <p>{format(parseISO(event.event_date), 'MMM d, yyyy')}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Location</p>
+            <p>{event.location || '-'}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-muted-foreground">Location</p>
-          <p>{event.location || '-'}</p>
-        </div>
-      </div>
-    </Card>
-  );
+        {eventVendors.length > 0 && (
+          <div className="mt-2 pt-2 border-t">
+            <div className="flex flex-wrap gap-1">
+              {eventVendors.slice(0, 3).map((ev: any) => (
+                <Badge key={ev.vendor_id} variant="outline" className="text-xs">
+                  <Store className="h-3 w-3 mr-1" />
+                  {ev.vendor?.vendor_name}
+                </Badge>
+              ))}
+              {eventVendors.length > 3 && (
+                <Badge variant="outline" className="text-xs">+{eventVendors.length - 3} more</Badge>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -304,16 +340,25 @@ export default function Events() {
                       {format(day, 'd')}
                     </div>
                     <div className="space-y-0.5 mt-0.5">
-                      {dayEvents.slice(0, 2).map(event => (
-                        <div
-                          key={event.id}
-                          onClick={() => handleEventClick(event)}
-                          className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded truncate text-white cursor-pointer hover:opacity-80 transition-opacity ${statusColors[event.status]}`}
-                          title={`${event.title} - ${event.clients?.name}`}
-                        >
-                          {event.title}
-                        </div>
-                      ))}
+                      {dayEvents.slice(0, 2).map(event => {
+                        const eventVendors = getEventVendors(event.id);
+                        return (
+                          <div
+                            key={event.id}
+                            onClick={() => handleEventClick(event)}
+                            className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded text-white cursor-pointer hover:opacity-80 transition-opacity ${statusColors[event.status]}`}
+                            title={`${event.title} - ${event.clients?.name}${eventVendors.length > 0 ? ` • ${eventVendors.map((ev: any) => ev.vendor?.vendor_name).join(', ')}` : ''}`}
+                          >
+                            <span className="truncate block">{event.title}</span>
+                            {eventVendors.length > 0 && (
+                              <span className="hidden sm:flex items-center gap-0.5 text-[9px] opacity-90 mt-0.5">
+                                <Store className="h-2.5 w-2.5" />
+                                {eventVendors.length}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                       {dayEvents.length > 2 && (
                         <div className="text-[10px] sm:text-xs text-muted-foreground">
                           +{dayEvents.length - 2} more
@@ -332,7 +377,7 @@ export default function Events() {
       {viewMode === 'list' && (
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -342,6 +387,20 @@ export default function Events() {
                   className="pl-10"
                 />
               </div>
+              <Select value={vendorFilter} onValueChange={setVendorFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vendors</SelectItem>
+                  {vendors?.map((vendor) => (
+                    <SelectItem key={vendor.id} value={vendor.id}>
+                      {vendor.vendor_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardHeader>
           <CardContent>
@@ -369,41 +428,61 @@ export default function Events() {
                         <TableHead>Event</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Location</TableHead>
+                        <TableHead>Vendors</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Region</TableHead>
                         {canManage && <TableHead className="w-[150px]">Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredEvents?.map((event) => (
-                        <TableRow 
-                          key={event.id} 
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => handleEventClick(event)}
-                        >
-                          <TableCell>
-                            <div className="font-medium">{event.title}</div>
-                            {event.description && (
-                              <div className="text-xs text-muted-foreground line-clamp-1">{event.description}</div>
-                            )}
-                          </TableCell>
-                          <TableCell>{event.clients?.name}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                              {format(parseISO(event.event_date), 'MMM d, yyyy')}
-                            </div>
-                          </TableCell>
-                          <TableCell>{event.location || '-'}</TableCell>
-                          <TableCell>
-                            <Badge className={`${statusColors[event.status]} text-white`}>
-                              {event.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{event.region}</Badge>
-                          </TableCell>
+                      {filteredEvents?.map((event) => {
+                        const eventVendors = getEventVendors(event.id);
+                        return (
+                          <TableRow 
+                            key={event.id} 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleEventClick(event)}
+                          >
+                            <TableCell>
+                              <div className="font-medium">{event.title}</div>
+                              {event.location && (
+                                <div className="text-xs text-muted-foreground">{event.location}</div>
+                              )}
+                            </TableCell>
+                            <TableCell>{event.clients?.name}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                {format(parseISO(event.event_date), 'MMM d, yyyy')}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {eventVendors.length === 0 ? (
+                                <span className="text-muted-foreground">-</span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1">
+                                  {eventVendors.slice(0, 2).map((ev: any) => (
+                                    <Badge key={ev.vendor_id} variant="outline" className="text-xs">
+                                      <Store className="h-3 w-3 mr-1" />
+                                      {ev.vendor?.vendor_name}
+                                    </Badge>
+                                  ))}
+                                  {eventVendors.length > 2 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{eventVendors.length - 2}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`${statusColors[event.status]} text-white`}>
+                                {event.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{event.region}</Badge>
+                            </TableCell>
                           {canManage && (
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-1">

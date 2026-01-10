@@ -24,6 +24,10 @@ export interface VendorUpdate extends Partial<VendorInsert> {
   id: string;
 }
 
+export interface VendorWithStats extends Vendor {
+  events_count?: number;
+}
+
 export function useVendors() {
   const { isSuperAdmin, userRegion } = useAuth();
 
@@ -42,6 +46,65 @@ export function useVendors() {
       const { data, error } = await query;
       if (error) throw error;
       return data as Vendor[];
+    },
+  });
+}
+
+// Fetch vendors with linked event counts
+export function useVendorsWithStats() {
+  const { isSuperAdmin, userRegion } = useAuth();
+
+  return useQuery({
+    queryKey: ['vendors-with-stats'],
+    queryFn: async () => {
+      // First get vendors
+      let vendorQuery = supabase
+        .from('vendors')
+        .select('*')
+        .order('vendor_name');
+
+      if (!isSuperAdmin && userRegion) {
+        vendorQuery = vendorQuery.eq('region', userRegion);
+      }
+
+      const { data: vendors, error: vendorError } = await vendorQuery;
+      if (vendorError) throw vendorError;
+
+      // Then get event_vendors counts
+      const { data: eventVendors, error: evError } = await supabase
+        .from('event_vendors')
+        .select('vendor_id');
+      
+      if (evError) throw evError;
+
+      // Count events per vendor
+      const countMap = new Map<string, number>();
+      eventVendors?.forEach(ev => {
+        countMap.set(ev.vendor_id, (countMap.get(ev.vendor_id) || 0) + 1);
+      });
+
+      return vendors.map(vendor => ({
+        ...vendor,
+        events_count: countMap.get(vendor.id) || 0,
+      })) as VendorWithStats[];
+    },
+  });
+}
+
+// Fetch all event-vendor mappings for display purposes
+export function useAllEventVendors() {
+  return useQuery({
+    queryKey: ['all-event-vendors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('event_vendors')
+        .select(`
+          event_id,
+          vendor_id,
+          vendor:vendors(id, vendor_name, vendor_type)
+        `);
+      if (error) throw error;
+      return data;
     },
   });
 }
