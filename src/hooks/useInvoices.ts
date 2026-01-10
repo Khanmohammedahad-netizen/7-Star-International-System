@@ -20,7 +20,7 @@ export function useInvoices() {
     queryFn: async () => {
       let query = supabase
         .from('invoices')
-        .select('*, clients(*)')
+        .select('*, clients(*), invoice_items(*)')
         .order('invoice_date', { ascending: false });
       
       if (!isSuperAdmin && userRole?.region) {
