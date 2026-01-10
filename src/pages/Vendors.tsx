@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Store, Phone, Mail, MapPin, Eye } from 'lucide-react';
-import { useVendors, useCreateVendor, useUpdateVendor, useDeleteVendor, useVendorEvents } from '@/hooks/useVendors';
+import { useState, useMemo } from 'react';
+import { Plus, Search, Edit, Trash2, Store, Phone, Mail, MapPin, Eye, Calendar, TrendingUp, Activity } from 'lucide-react';
+import { useVendors, useCreateVendor, useUpdateVendor, useDeleteVendor, useVendorEvents, useVendorsWithStats, VendorWithStats } from '@/hooks/useVendors';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -151,7 +151,7 @@ function VendorDetailDrawer({ vendor }: { vendor: Vendor }) {
 }
 
 export default function Vendors() {
-  const { data: vendors, isLoading } = useVendors();
+  const { data: vendorsWithStats, isLoading } = useVendorsWithStats();
   const createVendor = useCreateVendor();
   const updateVendor = useUpdateVendor();
   const deleteVendor = useDeleteVendor();
@@ -166,7 +166,25 @@ export default function Vendors() {
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [formData, setFormData] = useState(initialFormData);
 
-  const filteredVendors = vendors?.filter(vendor => {
+  // Calculate dashboard stats
+  const stats = useMemo(() => {
+    if (!vendorsWithStats) return { total: 0, active: 0, withEvents: 0, totalEvents: 0, byType: {} };
+    
+    const total = vendorsWithStats.length;
+    const active = vendorsWithStats.filter(v => v.status === 'active').length;
+    const withEvents = vendorsWithStats.filter(v => (v.events_count || 0) > 0).length;
+    const totalEvents = vendorsWithStats.reduce((sum, v) => sum + (v.events_count || 0), 0);
+    
+    // Group by type
+    const byType: Record<string, number> = {};
+    vendorsWithStats.forEach(v => {
+      byType[v.vendor_type] = (byType[v.vendor_type] || 0) + 1;
+    });
+    
+    return { total, active, withEvents, totalEvents, byType };
+  }, [vendorsWithStats]);
+
+  const filteredVendors = vendorsWithStats?.filter(vendor => {
     const matchesSearch = 
       vendor.vendor_name.toLowerCase().includes(search.toLowerCase()) ||
       vendor.representative_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -213,7 +231,7 @@ export default function Vendors() {
     setFormData(initialFormData);
   };
 
-  const VendorCard = ({ vendor }: { vendor: Vendor }) => (
+  const VendorCard = ({ vendor }: { vendor: VendorWithStats }) => (
     <Card className="p-4">
       <div className="flex justify-between items-start mb-2">
         <div>
@@ -231,6 +249,12 @@ export default function Vendors() {
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <MapPin className="h-3 w-3" /> {vendor.city}, {vendor.country}
         </p>
+      )}
+      {(vendor.events_count || 0) > 0 && (
+        <div className="flex items-center gap-1 text-sm text-primary mt-1">
+          <Calendar className="h-3 w-3" />
+          {vendor.events_count} event{vendor.events_count !== 1 ? 's' : ''}
+        </div>
       )}
       <div className="flex gap-2 justify-end border-t pt-3 mt-3">
         <Drawer>
@@ -273,6 +297,62 @@ export default function Vendors() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Dashboard Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Store className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">Total Vendors</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <Activity className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.active}</p>
+                <p className="text-xs text-muted-foreground">Active Vendors</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Calendar className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.withEvents}</p>
+                <p className="text-xs text-muted-foreground">With Events</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.totalEvents}</p>
+                <p className="text-xs text-muted-foreground">Total Linked Events</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Vendors</h1>
@@ -482,39 +562,51 @@ export default function Vendors() {
               {/* Desktop table view */}
               <div className="hidden sm:block">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[120px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredVendors?.map((vendor) => (
-                      <TableRow key={vendor.id}>
-                        <TableCell className="font-medium">{vendor.vendor_name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{VENDOR_TYPE_LABELS[vendor.vendor_type]}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {vendor.representative_name && <p>{vendor.representative_name}</p>}
-                            {vendor.representative_phone && (
-                              <p className="text-muted-foreground">{vendor.representative_phone}</p>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Events</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[120px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredVendors?.map((vendor) => (
+                        <TableRow key={vendor.id}>
+                          <TableCell>
+                            <div className="font-medium">{vendor.vendor_name}</div>
+                            {vendor.city && (
+                              <div className="text-xs text-muted-foreground">{vendor.city}, {vendor.country}</div>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {vendor.city && `${vendor.city}, `}{vendor.country}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={vendor.status === 'active' ? 'default' : 'secondary'}>
-                            {vendor.status}
-                          </Badge>
-                        </TableCell>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{VENDOR_TYPE_LABELS[vendor.vendor_type]}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {vendor.representative_name && <p>{vendor.representative_name}</p>}
+                              {vendor.representative_phone && (
+                                <p className="text-muted-foreground">{vendor.representative_phone}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {(vendor.events_count || 0) > 0 ? (
+                              <Badge variant="secondary" className="gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {vendor.events_count}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={vendor.status === 'active' ? 'default' : 'secondary'}>
+                              {vendor.status}
+                            </Badge>
+                          </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Drawer>
