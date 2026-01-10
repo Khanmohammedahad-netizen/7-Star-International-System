@@ -139,7 +139,16 @@ export default function Quotations() {
       status: quotation.status,
     });
     if (quotation.quotation_items && quotation.quotation_items.length > 0) {
-      setItems(quotation.quotation_items.map(item => ({ serial_no: item.serial_no, description: item.description, size: item.size || '', quantity: item.quantity, rate: item.rate, amount: item.amount || 0 })));
+      setItems(quotation.quotation_items.map(item => ({
+        serial_no: item.serial_no,
+        description: item.description,
+        size: item.size || '',
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.amount || (item.quantity * item.rate),
+      })));
+    } else {
+      setItems([{ serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0 }]);
     }
   }, []);
 

@@ -20,7 +20,7 @@ export function useQuotations() {
     queryFn: async () => {
       let query = supabase
         .from('quotations')
-        .select('*, clients(*)')
+        .select('*, clients(*), quotation_items(*)')
         .order('quotation_date', { ascending: false });
       
       if (!isSuperAdmin && userRole?.region) {

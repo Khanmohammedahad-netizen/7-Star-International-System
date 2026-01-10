@@ -176,8 +176,10 @@ export default function Invoices() {
         size: item.size || '',
         quantity: item.quantity,
         rate: item.rate,
-        amount: item.amount || 0,
+        amount: item.amount || (item.quantity * item.rate),
       })));
+    } else {
+      setItems([{ serial_no: 1, description: '', size: '', quantity: 1, rate: 0, amount: 0 }]);
     }
   }, []);
 

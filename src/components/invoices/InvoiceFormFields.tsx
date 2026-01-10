@@ -150,10 +150,16 @@ export function InvoiceFormFields({
                 )}
               </div>
               <div className="space-y-2">
-                <Input
+                <Textarea
                   value={item.description}
                   onChange={(e) => onItemChange(index, 'description', e.target.value)}
-                  placeholder="Description"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                    }
+                  }}
+                  placeholder="Description (Shift+Enter for new line)"
+                  rows={2}
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Input
@@ -206,10 +212,17 @@ export function InvoiceFormFields({
                 <TableRow key={index}>
                   <TableCell>{item.serial_no}</TableCell>
                   <TableCell>
-                    <Input
+                    <Textarea
                       value={item.description}
                       onChange={(e) => onItemChange(index, 'description', e.target.value)}
-                      placeholder="Description"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                        }
+                      }}
+                      placeholder="Description (Shift+Enter for new line)"
+                      rows={2}
+                      className="min-h-[60px]"
                     />
                   </TableCell>
                   <TableCell>
