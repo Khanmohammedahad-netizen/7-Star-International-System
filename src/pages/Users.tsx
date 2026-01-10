@@ -16,10 +16,12 @@ import { format, parseISO, isPast } from 'date-fns';
 
 const roleLabels: Record<string, string> = {
   super_admin: 'Super Admin',
+  admin: 'Admin',
   manager: 'Manager',
   supervisor: 'Supervisor',
   accountant: 'Accountant',
   staff: 'Staff',
+  pending: 'Pending Approval',
 };
 
 export default function Users() {
@@ -143,6 +145,7 @@ export default function Users() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="supervisor">Supervisor</SelectItem>
                     <SelectItem value="accountant">Accountant</SelectItem>
@@ -282,6 +285,7 @@ export default function Users() {
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="super_admin">Super Admin</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
                                         <SelectItem value="manager">Manager</SelectItem>
                                         <SelectItem value="supervisor">Supervisor</SelectItem>
                                         <SelectItem value="accountant">Accountant</SelectItem>

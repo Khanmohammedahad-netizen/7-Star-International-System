@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
-  const { user, loading, hasPermission } = useAuth();
+  const { user, loading, hasPermission, userRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -23,8 +23,13 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Redirect pending users to pending approval page
+  if (userRole?.role === 'pending') {
+    return <Navigate to="/pending-approval" replace />;
+  }
+
   if (requiredPermission && !hasPermission(requiredPermission)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/access-denied" replace />;
   }
 
   return <>{children}</>;
