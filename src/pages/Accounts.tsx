@@ -241,7 +241,7 @@ export default function Accounts() {
           </div>
 
           <div className="border rounded-lg p-3 sm:p-4 space-y-4">
-            <h4 className="font-medium text-sm sm:text-base">Payment Breakdown</h4>
+            <h4 className="font-medium text-sm sm:text-base">Mode of Payment</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label>E7 Bank Transfer</Label>
@@ -304,44 +304,6 @@ export default function Accounts() {
                 />
               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Mode of Payment</Label>
-              <Select
-                value={formData.mode_of_payment}
-                onValueChange={(value) => setFormData({ ...formData, mode_of_payment: value as any })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {isSuperAdmin && (
-              <div className="space-y-2">
-                <Label>Region</Label>
-                <Select
-                  value={formData.region}
-                  onValueChange={(value) => setFormData({ ...formData, region: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UAE">UAE</SelectItem>
-                    <SelectItem value="SAUDI">Saudi Arabia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-4">
