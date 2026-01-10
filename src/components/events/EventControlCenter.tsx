@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { X, Package, User, Phone, CreditCard, FileText, Edit, CheckCircle, XCircle, Clock, Download } from 'lucide-react';
+import { X, Package, User, Phone, CreditCard, FileText, Edit, CheckCircle, XCircle, Clock, Download, Store } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { useQuotations } from '@/hooks/useQuotations';
 import { usePayments } from '@/hooks/usePayments';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useEventVendors, useVendors, useLinkVendorToEvent, useUnlinkVendorFromEvent } from '@/hooks/useVendors';
 import { usePdfDownload } from '@/hooks/usePdfDownload';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO } from 'date-fns';
@@ -22,7 +23,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { MaterialCombobox } from '@/components/materials/MaterialCombobox';
+import { VendorMultiSelect } from '@/components/vendors/VendorMultiSelect';
 import { getCurrencyCode } from '@/lib/currency';
+import { VENDOR_TYPE_LABELS } from '@/types/database';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-500',
@@ -44,6 +47,12 @@ export function EventControlCenter({ event, isOpen, onClose, onEdit, canManage }
   const approveEvent = useApproveEvent();
   const { downloadPdf, isLoading: isPdfLoading } = usePdfDownload();
   const queryClient = useQueryClient();
+
+  // Fetch event vendors
+  const { data: eventVendors } = useEventVendors(event?.id || '');
+  const { data: allVendors } = useVendors();
+  const linkVendor = useLinkVendorToEvent();
+  const unlinkVendor = useUnlinkVendorFromEvent();
 
   // Fetch event materials
   const { data: eventMaterials } = useQuery({
@@ -225,24 +234,28 @@ export function EventControlCenter({ event, isOpen, onClose, onEdit, canManage }
             <Separator />
 
             <Tabs defaultValue="materials" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-auto">
-                <TabsTrigger value="materials" className="text-xs px-2 py-1.5">
+              <TabsList className="grid w-full grid-cols-6 h-auto">
+                <TabsTrigger value="materials" className="text-xs px-1 py-1.5">
                   <Package className="h-3 w-3 mr-1 hidden sm:inline" />
                   Materials
                 </TabsTrigger>
-                <TabsTrigger value="manager" className="text-xs px-2 py-1.5">
+                <TabsTrigger value="vendors" className="text-xs px-1 py-1.5">
+                  <Store className="h-3 w-3 mr-1 hidden sm:inline" />
+                  Vendors
+                </TabsTrigger>
+                <TabsTrigger value="manager" className="text-xs px-1 py-1.5">
                   <User className="h-3 w-3 mr-1 hidden sm:inline" />
                   Manager
                 </TabsTrigger>
-                <TabsTrigger value="client" className="text-xs px-2 py-1.5">
+                <TabsTrigger value="client" className="text-xs px-1 py-1.5">
                   <Phone className="h-3 w-3 mr-1 hidden sm:inline" />
                   Client
                 </TabsTrigger>
-                <TabsTrigger value="payments" className="text-xs px-2 py-1.5">
+                <TabsTrigger value="payments" className="text-xs px-1 py-1.5">
                   <CreditCard className="h-3 w-3 mr-1 hidden sm:inline" />
                   Payments
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="text-xs px-2 py-1.5">
+                <TabsTrigger value="documents" className="text-xs px-1 py-1.5">
                   <FileText className="h-3 w-3 mr-1 hidden sm:inline" />
                   Docs
                 </TabsTrigger>
@@ -324,6 +337,71 @@ export function EventControlCenter({ event, isOpen, onClose, onEdit, canManage }
                               Total: {eventMaterials.reduce((sum: number, em: any) => sum + (em.total_price || 0), 0).toFixed(2)} {getCurrencyCode(event.region)}
                             </div>
                           )}
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Vendors Tab */}
+              <TabsContent value="vendors" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Linked Vendors</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {eventVendors?.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No vendors linked to this event</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {eventVendors?.map((ev: any) => (
+                          <div key={ev.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{ev.vendor?.vendor_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {VENDOR_TYPE_LABELS[ev.vendor?.vendor_type]} • {ev.vendor?.representative_phone || 'No phone'}
+                              </p>
+                            </div>
+                            {canManage && hasPermission('canManageVendors') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => unlinkVendor.mutate({ eventId: event.id, vendorId: ev.vendor_id })}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {canManage && hasPermission('canManageVendors') && (
+                      <>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label className="text-xs">Add Vendor</Label>
+                          <Select
+                            onValueChange={(vendorId) => {
+                              if (vendorId) {
+                                linkVendor.mutate({ eventId: event.id, vendorId });
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select vendor to add..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allVendors
+                                ?.filter((v) => !eventVendors?.some((ev: any) => ev.vendor_id === v.id))
+                                .map((vendor) => (
+                                  <SelectItem key={vendor.id} value={vendor.id}>
+                                    {vendor.vendor_name} - {VENDOR_TYPE_LABELS[vendor.vendor_type]}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </>
                     )}

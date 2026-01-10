@@ -3,7 +3,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClientCombobox } from '@/components/ClientCombobox';
+import { VendorMultiSelect } from '@/components/vendors/VendorMultiSelect';
 import { Client } from '@/hooks/useClients';
+import { Vendor } from '@/types/database';
 
 interface EventFormData {
   title: string;
@@ -21,9 +23,20 @@ interface EventFormFieldsProps {
   onFieldChange: (field: keyof EventFormData, value: string | number) => void;
   clients: Client[] | undefined;
   isSuperAdmin: boolean;
+  vendors?: Vendor[];
+  selectedVendorIds?: string[];
+  onVendorSelectionChange?: (ids: string[]) => void;
 }
 
-export function EventFormFields({ formData, onFieldChange, clients, isSuperAdmin }: EventFormFieldsProps) {
+export function EventFormFields({ 
+  formData, 
+  onFieldChange, 
+  clients, 
+  isSuperAdmin,
+  vendors,
+  selectedVendorIds = [],
+  onVendorSelectionChange,
+}: EventFormFieldsProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -94,6 +107,20 @@ export function EventFormFields({ formData, onFieldChange, clients, isSuperAdmin
           </div>
         )}
       </div>
+
+      {/* Vendor Selection */}
+      {vendors && onVendorSelectionChange && (
+        <div className="space-y-2">
+          <Label>Vendors</Label>
+          <VendorMultiSelect
+            vendors={vendors}
+            selectedIds={selectedVendorIds}
+            onSelectionChange={onVendorSelectionChange}
+            placeholder="Select vendors for this event..."
+          />
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label>Description</Label>
         <Textarea
