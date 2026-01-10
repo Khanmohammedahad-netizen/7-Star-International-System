@@ -65,7 +65,7 @@ export function useCreateInvoice() {
       if (invoiceError) throw invoiceError;
 
       if (items.length > 0) {
-        // Calculate amount for each item (quantity * rate) before inserting
+        // Note: amount is a generated column (quantity * rate), so we don't include it
         const itemsWithInvoiceId = items.map(item => ({
           invoice_id: invoiceData.id,
           serial_no: item.serial_no,
@@ -73,7 +73,6 @@ export function useCreateInvoice() {
           size: item.size || null,
           quantity: item.quantity,
           rate: item.rate,
-          amount: item.quantity * item.rate, // Always calculate amount
         }));
         const { error: itemsError } = await supabase
           .from('invoice_items')
@@ -110,7 +109,7 @@ export function useUpdateInvoice() {
       if (items) {
         await supabase.from('invoice_items').delete().eq('invoice_id', id);
         if (items.length > 0) {
-          // Calculate amount for each item (quantity * rate) before inserting
+          // Note: amount is a generated column (quantity * rate), so we don't include it
           const itemsWithInvoiceId = items.map(item => ({
             invoice_id: id,
             serial_no: item.serial_no,
@@ -118,7 +117,6 @@ export function useUpdateInvoice() {
             size: item.size || null,
             quantity: item.quantity,
             rate: item.rate,
-            amount: item.quantity * item.rate, // Always calculate amount
           }));
           const { error: itemsError } = await supabase
             .from('invoice_items')
