@@ -9,7 +9,8 @@ import {
   Building2, 
   UserCog,
   LogOut,
-  Star
+  Star,
+  Store
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +48,12 @@ export function AppSidebar() {
       url: '/events', 
       icon: Calendar,
       visible: hasPermission('canViewEvents'),
+    },
+    { 
+      title: 'Vendors', 
+      url: '/vendors', 
+      icon: Store,
+      visible: hasPermission('canViewVendors'),
     },
     { 
       title: 'Accounts', 

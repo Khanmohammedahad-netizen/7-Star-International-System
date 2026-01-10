@@ -148,6 +148,12 @@ export function LoginForm() {
               >
                 Forgot Password?
               </Button>
+              <div className="text-center text-sm text-muted-foreground">
+                Don't have an account?{' '}
+                <a href="/signup" className="text-primary hover:underline">
+                  Sign Up
+                </a>
+              </div>
             </form>
           )}
         </CardContent>

@@ -284,6 +284,48 @@ export type Database = {
           },
         ]
       }
+      event_vendors: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          event_id: string
+          id: string
+          notes: string | null
+          vendor_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          notes?: string | null
+          vendor_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          notes?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_vendors_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_vendors_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           approved_at: string | null
@@ -827,11 +869,72 @@ export type Database = {
         }
         Relationships: []
       }
+      vendors: {
+        Row: {
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          facilities_provided: string | null
+          id: string
+          notes: string | null
+          region: Database["public"]["Enums"]["region"]
+          representative_email: string | null
+          representative_name: string | null
+          representative_phone: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          vendor_name: string
+          vendor_type: Database["public"]["Enums"]["vendor_type"]
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          facilities_provided?: string | null
+          id?: string
+          notes?: string | null
+          region: Database["public"]["Enums"]["region"]
+          representative_email?: string | null
+          representative_name?: string | null
+          representative_phone?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          vendor_name: string
+          vendor_type?: Database["public"]["Enums"]["vendor_type"]
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          facilities_provided?: string | null
+          id?: string
+          notes?: string | null
+          region?: Database["public"]["Enums"]["region"]
+          representative_email?: string | null
+          representative_name?: string | null
+          representative_phone?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          vendor_name?: string
+          vendor_type?: Database["public"]["Enums"]["vendor_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      count_super_admins: { Args: never; Returns: number }
       get_next_invoice_number: {
         Args: { _region: Database["public"]["Enums"]["region"] }
         Returns: string
@@ -854,6 +957,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_manager_or_higher: { Args: { _user_id: string }; Returns: boolean }
+      is_pending_user: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
@@ -863,6 +969,8 @@ export type Database = {
         | "supervisor"
         | "accountant"
         | "staff"
+        | "admin"
+        | "pending"
       document_status: "draft" | "sent" | "approved" | "rejected"
       event_status: "pending" | "approved" | "rejected" | "completed"
       payment_mode:
@@ -872,6 +980,19 @@ export type Database = {
         | "cheque"
         | "other"
       region: "UAE" | "SAUDI"
+      vendor_type:
+        | "decor"
+        | "catering"
+        | "lighting"
+        | "venue"
+        | "security"
+        | "audio_visual"
+        | "photography"
+        | "transportation"
+        | "florist"
+        | "furniture"
+        | "staffing"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -999,11 +1120,33 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "manager", "supervisor", "accountant", "staff"],
+      app_role: [
+        "super_admin",
+        "manager",
+        "supervisor",
+        "accountant",
+        "staff",
+        "admin",
+        "pending",
+      ],
       document_status: ["draft", "sent", "approved", "rejected"],
       event_status: ["pending", "approved", "rejected", "completed"],
       payment_mode: ["bank_transfer", "cash", "credit_card", "cheque", "other"],
       region: ["UAE", "SAUDI"],
+      vendor_type: [
+        "decor",
+        "catering",
+        "lighting",
+        "venue",
+        "security",
+        "audio_visual",
+        "photography",
+        "transportation",
+        "florist",
+        "furniture",
+        "staffing",
+        "other",
+      ],
     },
   },
 } as const

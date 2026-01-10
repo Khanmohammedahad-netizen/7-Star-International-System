@@ -1,9 +1,11 @@
 // Custom types for the 7 Star International application
-export type AppRole = 'super_admin' | 'manager' | 'supervisor' | 'accountant' | 'staff';
+export type AppRole = 'super_admin' | 'admin' | 'manager' | 'supervisor' | 'accountant' | 'staff' | 'pending';
 export type Region = 'UAE' | 'SAUDI';
 export type EventStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 export type PaymentMode = 'bank_transfer' | 'cash' | 'credit_card' | 'cheque' | 'other';
 export type DocumentStatus = 'draft' | 'sent' | 'approved' | 'rejected';
+export type VendorType = 'decor' | 'catering' | 'lighting' | 'venue' | 'security' | 'audio_visual' | 'photography' | 'transportation' | 'florist' | 'furniture' | 'staffing' | 'other';
+export type VendorStatus = 'active' | 'inactive';
 
 export interface Profile {
   id: string;
@@ -77,6 +79,37 @@ export interface Event {
   created_by?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Vendor {
+  id: string;
+  vendor_name: string;
+  vendor_type: VendorType;
+  facilities_provided?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  representative_name?: string;
+  representative_phone?: string;
+  representative_email?: string;
+  notes?: string;
+  status: VendorStatus;
+  region: Region;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventVendor {
+  id: string;
+  event_id: string;
+  vendor_id: string;
+  notes?: string;
+  assigned_by?: string;
+  created_at: string;
+  vendor?: Vendor;
+  event?: Event;
 }
 
 export interface Material {
@@ -242,6 +275,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, {
   canViewUsers: boolean;
   canManageUsers: boolean;
   canViewPersonalAccounts: boolean;
+  canViewVendors: boolean;
+  canManageVendors: boolean;
 }> = {
   super_admin: {
     canViewDashboard: true,
@@ -262,6 +297,30 @@ export const ROLE_PERMISSIONS: Record<AppRole, {
     canViewUsers: true,
     canManageUsers: true,
     canViewPersonalAccounts: true,
+    canViewVendors: true,
+    canManageVendors: true,
+  },
+  admin: {
+    canViewDashboard: true,
+    canViewEvents: true,
+    canManageEvents: true,
+    canViewClients: true,
+    canManageClients: true,
+    canViewEmployees: true,
+    canManageEmployees: true,
+    canViewQuotations: true,
+    canManageQuotations: true,
+    canViewInvoices: true,
+    canManageInvoices: true,
+    canViewPayments: true,
+    canManagePayments: true,
+    canViewAccounts: true,
+    canManageAccounts: true,
+    canViewUsers: false,
+    canManageUsers: false,
+    canViewPersonalAccounts: false,
+    canViewVendors: true,
+    canManageVendors: false,
   },
   manager: {
     canViewDashboard: true,
@@ -282,6 +341,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, {
     canViewUsers: false,
     canManageUsers: false,
     canViewPersonalAccounts: false,
+    canViewVendors: true,
+    canManageVendors: false,
   },
   supervisor: {
     canViewDashboard: true,
@@ -302,6 +363,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, {
     canViewUsers: false,
     canManageUsers: false,
     canViewPersonalAccounts: false,
+    canViewVendors: false,
+    canManageVendors: false,
   },
   accountant: {
     canViewDashboard: true,
@@ -322,6 +385,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, {
     canViewUsers: false,
     canManageUsers: false,
     canViewPersonalAccounts: false,
+    canViewVendors: false,
+    canManageVendors: false,
   },
   staff: {
     canViewDashboard: true,
@@ -342,5 +407,56 @@ export const ROLE_PERMISSIONS: Record<AppRole, {
     canViewUsers: false,
     canManageUsers: false,
     canViewPersonalAccounts: false,
+    canViewVendors: false,
+    canManageVendors: false,
   },
+  pending: {
+    canViewDashboard: false,
+    canViewEvents: false,
+    canManageEvents: false,
+    canViewClients: false,
+    canManageClients: false,
+    canViewEmployees: false,
+    canManageEmployees: false,
+    canViewQuotations: false,
+    canManageQuotations: false,
+    canViewInvoices: false,
+    canManageInvoices: false,
+    canViewPayments: false,
+    canManagePayments: false,
+    canViewAccounts: false,
+    canManageAccounts: false,
+    canViewUsers: false,
+    canManageUsers: false,
+    canViewPersonalAccounts: false,
+    canViewVendors: false,
+    canManageVendors: false,
+  },
+};
+
+// Vendor type labels
+export const VENDOR_TYPE_LABELS: Record<VendorType, string> = {
+  decor: 'Decor',
+  catering: 'Catering',
+  lighting: 'Lighting',
+  venue: 'Venue',
+  security: 'Security',
+  audio_visual: 'Audio/Visual',
+  photography: 'Photography',
+  transportation: 'Transportation',
+  florist: 'Florist',
+  furniture: 'Furniture',
+  staffing: 'Staffing',
+  other: 'Other',
+};
+
+// Role labels
+export const ROLE_LABELS: Record<AppRole, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  manager: 'Manager',
+  supervisor: 'Supervisor',
+  accountant: 'Accountant',
+  staff: 'Staff',
+  pending: 'Pending Approval',
 };
