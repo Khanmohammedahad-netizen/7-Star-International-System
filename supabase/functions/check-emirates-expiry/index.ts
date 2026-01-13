@@ -9,6 +9,47 @@ const corsHeaders = {
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+// HTML escape function to prevent XSS in emails
+function escapeHtml(unsafe: string | null | undefined): string {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Authentication helper
+async function authenticateRequest(req: Request, supabaseUrl: string, supabaseAnonKey: string) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return { error: 'Missing authorization header', status: 401 };
+  }
+
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  if (authError || !user) {
+    return { error: 'Unauthorized', status: 401 };
+  }
+
+  // Verify user role/permissions - only super_admin and admin can trigger expiry checks
+  const { data: userRole } = await supabaseClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!userRole || !['super_admin', 'admin'].includes(userRole.role)) {
+    return { error: 'Insufficient permissions', status: 403 };
+  }
+
+  return { user, userRole: userRole.role };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -16,7 +57,19 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Authenticate the request
+    const authResult = await authenticateRequest(req, supabaseUrl, supabaseAnonKey);
+    if ('error' in authResult) {
+      return new Response(
+        JSON.stringify({ error: authResult.error }),
+        { status: authResult.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Use service key for data access after authentication is verified
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get employees with Emirates ID expiring in next 30 days
@@ -73,7 +126,7 @@ serve(async (req) => {
           await resend.emails.send({
             from: "7 Star Events <onboarding@resend.dev>",
             to: [adminEmail],
-            subject: `Emirates ID Expiry Alert - ${employee.full_name}`,
+            subject: `Emirates ID Expiry Alert - ${escapeHtml(employee.full_name)}`,
             html: `
               <!DOCTYPE html>
               <html>
@@ -94,11 +147,11 @@ serve(async (req) => {
                   <div class="content">
                     <h2>Document Expiry Reminder</h2>
                     <div class="alert-box">
-                      <p><strong>Employee Name:</strong> ${employee.full_name}</p>
-                      <p><strong>Emirates ID:</strong> ${employee.emirates_id || 'N/A'}</p>
-                      <p><strong>Expiry Date:</strong> ${employee.emirates_id_expiry}</p>
+                      <p><strong>Employee Name:</strong> ${escapeHtml(employee.full_name)}</p>
+                      <p><strong>Emirates ID:</strong> ${escapeHtml(employee.emirates_id) || 'N/A'}</p>
+                      <p><strong>Expiry Date:</strong> ${escapeHtml(employee.emirates_id_expiry)}</p>
                       <p><strong>Days Until Expiry:</strong> ${daysRemaining} days</p>
-                      <p><strong>Region:</strong> ${employee.region}</p>
+                      <p><strong>Region:</strong> ${escapeHtml(employee.region)}</p>
                     </div>
                     <p>Please take necessary action to renew this document before it expires.</p>
                   </div>

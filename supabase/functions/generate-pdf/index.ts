@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// HTML escape function to prevent XSS
+function escapeHtml(unsafe: string | null | undefined): string {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Currency mapping based on region
 const CURRENCY_MAP: Record<string, string> = {
   UAE: 'AED',
@@ -75,16 +86,58 @@ const formatNumber = (num: number): string => {
   return num.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+// Authentication helper
+async function authenticateRequest(req: Request, supabaseUrl: string, supabaseAnonKey: string) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return { error: 'Missing authorization header', status: 401 };
+  }
+
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  if (authError || !user) {
+    return { error: 'Unauthorized', status: 401 };
+  }
+
+  // Verify user role/permissions
+  const { data: userRole } = await supabaseClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!userRole || !['super_admin', 'admin', 'accountant', 'manager'].includes(userRole.role)) {
+    return { error: 'Insufficient permissions', status: 403 };
+  }
+
+  return { user, userRole: userRole.role };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Authenticate the request
+    const authResult = await authenticateRequest(req, supabaseUrl, supabaseAnonKey);
+    if ('error' in authResult) {
+      return new Response(
+        JSON.stringify({ error: authResult.error }),
+        { status: authResult.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { type, id, clientId, fromDate, toDate } = await req.json();
     
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Use service key for data access after authentication is verified
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     let html = '';
@@ -103,9 +156,9 @@ serve(async (req) => {
         .sort((a: any, b: any) => a.serial_no - b.serial_no)
         .map((item: any) => `
           <tr>
-            <td class="text-center">${item.serial_no}</td>
-            <td>${item.description}</td>
-            <td class="text-center">${item.size || '-'}</td>
+            <td class="text-center">${escapeHtml(String(item.serial_no))}</td>
+            <td>${escapeHtml(item.description)}</td>
+            <td class="text-center">${escapeHtml(item.size) || '-'}</td>
             <td class="text-center">${item.quantity}</td>
             <td class="text-right">${formatNumber(item.rate)}</td>
             <td class="text-right green-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
@@ -191,13 +244,13 @@ body { font-family:Calibri, Arial; font-size:12px; }
   <div class="title">Quotation</div>
 
   <div class="info">
-    <div>CLIENT: ${quotation.clients?.name || ''}</div>
-    <div>Element: ${quotation.element || '-'}</div>
+    <div>CLIENT: ${escapeHtml(quotation.clients?.name)}</div>
+    <div>Element: ${escapeHtml(quotation.element) || '-'}</div>
   </div>
 
   <div class="green">
     <div>Date: ${formatDate(quotation.quotation_date)}</div>
-    <div>Quotation No: ${quotation.quotation_number}</div>
+    <div>Quotation No: ${escapeHtml(quotation.quotation_number)}</div>
     <div>VAT TRN: 104038790200003</div>
   </div>
 
@@ -275,7 +328,7 @@ body { font-family:Calibri, Arial; font-size:12px; }
 
   <div class="footer-bar">
     <span>Quotation Date: ${formatDate(quotation.quotation_date)}</span>
-    <span>Quotation No: ${quotation.quotation_number}</span>
+    <span>Quotation No: ${escapeHtml(quotation.quotation_number)}</span>
   </div>
 </div>
 
@@ -328,9 +381,9 @@ body { font-family:Calibri, Arial; font-size:12px; }
           
           return `
             <tr>
-              <td class="text-center">${displaySerialNo}</td>
-              <td style="${descriptionStyle}">${item.description}</td>
-              <td class="text-center">${item.size || '-'}</td>
+              <td class="text-center">${escapeHtml(displaySerialNo)}</td>
+              <td style="${descriptionStyle}">${escapeHtml(item.description)}</td>
+              <td class="text-center">${escapeHtml(item.size) || '-'}</td>
               <td class="text-center">${item.quantity}</td>
               <td class="text-right">${formatNumber(item.rate)}</td>
               <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
@@ -459,12 +512,12 @@ td {
   <div class="info">
     <div>
       Invoice Date: ${formatDate(invoice.invoice_date)}<br>
-      Invoice No: ${invoice.invoice_number}<br>
+      Invoice No: ${escapeHtml(invoice.invoice_number)}<br>
       VAT TRN: 104038790200003
     </div>
     <div>
       <b>Client:</b><br>
-      ${invoice.clients?.name || ''}
+      ${escapeHtml(invoice.clients?.name)}
     </div>
   </div>
 
@@ -592,9 +645,9 @@ td {
         return `
           <tr>
             <td>${formatDate(entry.date)}</td>
-            <td>${entry.particulars}</td>
-            <td class="center">${entry.invType}</td>
-            <td>${entry.invNo}</td>
+            <td>${escapeHtml(entry.particulars)}</td>
+            <td class="center">${escapeHtml(entry.invType)}</td>
+            <td>${escapeHtml(entry.invNo)}</td>
             <td class="right">${entry.debit > 0 ? formatNumber(entry.debit) : '-'}</td>
             <td class="right">${entry.credit > 0 ? formatNumber(entry.credit) : '-'}</td>
           </tr>
@@ -623,7 +676,7 @@ SAIH SHUBAIB 3<br>
 DUBAI - UAE
 </p>
 
-<h4 class="center">${client.name}</h4>
+<h4 class="center">${escapeHtml(client.name)}</h4>
 <h3 class="center">LEDGER ACCOUNT</h3>
 <p class="center">${fromDate ? formatDate(fromDate) : 'Beginning'} to ${toDate ? formatDate(toDate) : 'Today'}</p>
 

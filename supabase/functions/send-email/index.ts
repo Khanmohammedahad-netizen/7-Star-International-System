@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -12,6 +13,47 @@ interface EmailRequest {
   type: 'invitation' | 'emirates_expiry';
   to: string;
   data: Record<string, string>;
+}
+
+// HTML escape function to prevent XSS in emails
+function escapeHtml(unsafe: string | null | undefined): string {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Authentication helper
+async function authenticateRequest(req: Request, supabaseUrl: string, supabaseAnonKey: string) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return { error: 'Missing authorization header', status: 401 };
+  }
+
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  if (authError || !user) {
+    return { error: 'Unauthorized', status: 401 };
+  }
+
+  // Verify user role/permissions
+  const { data: userRole } = await supabaseClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!userRole || !['super_admin', 'admin'].includes(userRole.role)) {
+    return { error: 'Insufficient permissions', status: 403 };
+  }
+
+  return { user, userRole: userRole.role };
 }
 
 const getInvitationEmail = (data: Record<string, string>) => ({
@@ -38,11 +80,11 @@ const getInvitationEmail = (data: Record<string, string>) => ({
           <h2>You've Been Invited!</h2>
           <p>Hello,</p>
           <p>You have been invited to join the 7 Star International Events management system with the following role:</p>
-          <p><strong>Role:</strong> ${data.role}<br>
-          <strong>Region:</strong> ${data.region}</p>
+          <p><strong>Role:</strong> ${escapeHtml(data.role)}<br>
+          <strong>Region:</strong> ${escapeHtml(data.region)}</p>
           <p>Please click the button below to complete your registration:</p>
           <p style="text-align: center;">
-            <a href="${data.inviteUrl}" class="button">Accept Invitation</a>
+            <a href="${escapeHtml(data.inviteUrl)}" class="button">Accept Invitation</a>
           </p>
           <p>This invitation will expire in 7 days.</p>
           <p>If you did not expect this invitation, please ignore this email.</p>
@@ -59,7 +101,7 @@ const getInvitationEmail = (data: Record<string, string>) => ({
 });
 
 const getEmiratesExpiryEmail = (data: Record<string, string>) => ({
-  subject: `Emirates ID Expiry Alert - ${data.employeeName}`,
+  subject: `Emirates ID Expiry Alert - ${escapeHtml(data.employeeName)}`,
   html: `
     <!DOCTYPE html>
     <html>
@@ -82,13 +124,13 @@ const getEmiratesExpiryEmail = (data: Record<string, string>) => ({
           <h2>Document Expiry Reminder</h2>
           <p>This is an automated reminder about an upcoming Emirates ID expiration:</p>
           <div class="alert-box">
-            <p><strong>Employee Name:</strong> ${data.employeeName}</p>
-            <p><strong>Emirates ID:</strong> ${data.emiratesId}</p>
-            <p><strong>Expiry Date:</strong> ${data.expiryDate}</p>
-            <p><strong>Days Until Expiry:</strong> ${data.daysRemaining} days</p>
+            <p><strong>Employee Name:</strong> ${escapeHtml(data.employeeName)}</p>
+            <p><strong>Emirates ID:</strong> ${escapeHtml(data.emiratesId)}</p>
+            <p><strong>Expiry Date:</strong> ${escapeHtml(data.expiryDate)}</p>
+            <p><strong>Days Until Expiry:</strong> ${escapeHtml(data.daysRemaining)} days</p>
           </div>
           <p>Please take necessary action to renew this document before it expires.</p>
-          <p>Region: ${data.region}</p>
+          <p>Region: ${escapeHtml(data.region)}</p>
         </div>
         <div class="footer">
           <p>7 Star International Events L.L.C<br>
@@ -107,7 +149,28 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    // Authenticate the request
+    const authResult = await authenticateRequest(req, supabaseUrl, supabaseAnonKey);
+    if ('error' in authResult) {
+      return new Response(
+        JSON.stringify({ error: authResult.error }),
+        { status: authResult.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { type, to, data }: EmailRequest = await req.json();
+
+    // Validate email address format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     let emailContent;
     switch (type) {
