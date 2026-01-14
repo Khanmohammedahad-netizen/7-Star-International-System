@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface PdfDownloadOptions {
@@ -14,34 +13,58 @@ interface PdfDownloadOptions {
 export function usePdfDownload() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const downloadPdf = async ({ type, id, clientId, fromDate, toDate, filename }: PdfDownloadOptions) => {
+  const downloadPdf = async ({
+    type,
+    id,
+    clientId,
+    fromDate,
+    toDate,
+    filename,
+  }: PdfDownloadOptions) => {
     setIsLoading(true);
+
     try {
-      const { data, error } = await supabase.functions.invoke('generate-pdf', {
-        body: { type, id, clientId, fromDate, toDate },
-      });
+      let endpoint = '';
 
-      if (error) throw error;
-
-      // Create a printable window with the HTML
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        toast.error('Please allow popups to download PDF');
+      if (type === 'invoice') {
+        endpoint = 'generate-invoice';
+      } else if (type === 'quotation') {
+        endpoint = 'generate-quotation';
+      } else {
+        toast.error('Ledger PDF not supported yet');
         return;
       }
 
-      printWindow.document.write(data.html);
-      printWindow.document.close();
-      
-      // Wait for content to load then print
-      printWindow.onload = () => {
-        printWindow.print();
-      };
+      const response = await fetch(
+        'https://7-star-pdf-service-production.up.railway.app/' + endpoint,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id,
+            clientId,
+            fromDate,
+            toDate,
+          }),
+        }
+      );
 
-      toast.success('PDF ready for download');
+      if (!response.ok) {
+        throw new Error('Railway PDF generation failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      // ✅ OPEN REAL PDF (NO HTML, NO PRINT)
+      window.open(url, '_blank');
+
+      toast.success('PDF downloaded successfully');
     } catch (error: any) {
       console.error('PDF download error:', error);
-      toast.error(`Failed to generate PDF: ${error.message}`);
+      toast.error(error.message || 'Failed to generate PDF');
     } finally {
       setIsLoading(false);
     }
