@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tax Invoice</title>
+<style>
+body { font-family: Arial; font-size: 12px; margin: 30px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid black; padding: 6px; }
+.right { text-align: right; }
+.center { text-align: center; }
+</style>
+</head>
+<body>
+
+<h3>7 STAR INTERNATIONAL EVENTS L.L.C</h3>
+<p>P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+SAIH SHUBAIB 3<br>
+DUBAI - UAE</p>
+
+<h2 class="center">TAX INVOICE</h2>
+
+<table>
+<tr><td>Invoice Date</td><td>{{INVOICE_DATE}}</td></tr>
+<tr><td>Invoice Number</td><td>{{INVOICE_NO}}</td></tr>
+<tr><td>VAT TRN</td><td>104038790200003</td></tr>
+</table>
+
+<br>
+
+<table>
+<thead>
+<tr>
+<th>S.No</th><th>Description</th><th>Size</th>
+<th>Qty</th><th>Rate AED</th><th>Amount AED</th>
+</tr>
+</thead>
+<tbody>
+{{INVOICE_ROWS}}
+</tbody>
+</table>
+
+<table>
+<tr><td class="right">Net Amount</td><td class="right">{{NET}}</td></tr>
+<tr><td class="right">5% VAT</td><td class="right">{{VAT}}</td></tr>
+<tr><td class="right"><strong>Total</strong></td><td class="right"><strong>{{TOTAL}}</strong></td></tr>
+</table>
+
+<p>Amount in Words: {{AMOUNT_WORDS}}</p>
+
+<p>
+Confirmed by: Shaji Mohammed Khan<br>
+Signature: ____________
+</p>
+
+<p>
+<strong>Bank Details:</strong><br>
+ADCB BANK<br>
+IBAN: AE020030012980065820001
+</p>
+
+</body>
+</html>
