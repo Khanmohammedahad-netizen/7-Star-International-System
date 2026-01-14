@@ -116,282 +116,14 @@ async function authenticateRequest(req: Request, supabaseUrl: string, supabaseAn
   return { user, userRole: userRole.role };
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+// Logo URL for PDF generation
+const LOGO_URL = 'https://ybgxfnykoqaggytachnv.supabase.co/storage/v1/object/public/assets/logo.jpeg';
 
-  try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+// ============================================
+// HTML Templates with Placeholders
+// ============================================
 
-    // Authenticate the request
-    const authResult = await authenticateRequest(req, supabaseUrl, supabaseAnonKey);
-    if ('error' in authResult) {
-      return new Response(
-        JSON.stringify({ error: authResult.error }),
-        { status: authResult.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { type, id, clientId, fromDate, toDate } = await req.json();
-    
-    // Use service key for data access after authentication is verified
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    let html = '';
-
-    if (type === 'quotation') {
-      const { data: quotation, error } = await supabase
-        .from('quotations')
-        .select('*, clients(*), quotation_items(*)')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      
-      const currency = getCurrencyCode(quotation.region);
-      const rows = quotation.quotation_items
-        .sort((a: any, b: any) => a.serial_no - b.serial_no)
-        .map((item: any) => `
-          <tr>
-            <td class="text-center">${escapeHtml(String(item.serial_no))}</td>
-            <td>${escapeHtml(item.description)}</td>
-            <td class="text-center">${escapeHtml(item.size) || '-'}</td>
-            <td class="text-center">${item.quantity}</td>
-            <td class="text-right">${formatNumber(item.rate)}</td>
-            <td class="text-right green-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
-          </tr>
-        `).join('');
-
-      // Generate empty rows to fill the table
-      const emptyRowCount = Math.max(0, 10 - quotation.quotation_items.length);
-      const emptyRows = Array(emptyRowCount).fill(`
-        <tr>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td class="green-col">&nbsp;</td>
-        </tr>
-      `).join('');
-
-      html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Quotation</title>
-<style>
-html, body { width:210mm; margin:0; }
-@page { size:A4; margin:18mm; }
-body { font-family:Calibri, Arial; font-size:12px; }
-.page {
-  width:174mm;
-  height:261mm;
-  position:relative;
-}
-.page-break { page-break-after: always; }
-.green { background:#cfe5b3; padding:6px; font-weight:bold; }
-.footer-bar {
-  position:absolute; bottom:0; left:0; right:0;
-  background:#cfe5b3; padding:6px;
-  display:flex; justify-content:space-between;
-  font-size:10.5px;
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-}
-.logo img { height: 65px; }
-.company {
-  text-align: right;
-  font-size: 11px;
-}
-.title {
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  margin: 6px 0;
-}
-.info { font-size: 11px; margin: 6px 0; }
-.terms { font-size: 11px; line-height: 1.6; }
-.bank { font-size: 11px; line-height: 1.6; }
-.approval {
-  margin-top: 30px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-}
-</style>
-</head>
-<body>
-
-<!-- PAGE 1: Dynamic content -->
-<div class="page page-break">
-  <div class="header">
-    <div class="logo">
-      <img src="https://ybgxfnykoqaggytachnv.supabase.co/storage/v1/object/public/assets/logo.jpeg" alt="Logo" onerror="this.style.display='none'">
-    </div>
-    <div class="company">
-      <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
-      P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-      SAIH SHUBAIB 3<br>DUBAI - UAE
-    </div>
-  </div>
-
-  <div class="title">Quotation</div>
-
-  <div class="info">
-    <div>CLIENT: ${escapeHtml(quotation.clients?.name)}</div>
-    <div>Element: ${escapeHtml(quotation.element) || '-'}</div>
-  </div>
-
-  <div class="green">
-    <div>Date: ${formatDate(quotation.quotation_date)}</div>
-    <div>Quotation No: ${escapeHtml(quotation.quotation_number)}</div>
-    <div>VAT TRN: 104038790200003</div>
-  </div>
-
-  <table style="width:100%; border-collapse:collapse; margin-top:8px;">
-    <thead>
-      <tr>
-        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:6%;">S.No</th>
-        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:34%;">Description</th>
-        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:8%;">Size</th>
-        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:10%;">Qty</th>
-        <th style="border:1px solid #000; background:#e6e6e6; padding:5px; width:16%;">Rate ${currency}</th>
-        <th style="border:1px solid #000; background:#cfe5b3; padding:5px; width:16%; font-weight:bold;">Amount ${currency}</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows}
-      ${emptyRows}
-    </tbody>
-  </table>
-
-  <table style="width:40%; margin-left:auto; margin-top:10px; border:2px solid #000;">
-    <tr>
-      <td style="background:#cfe5b3; padding:6px; font-weight:bold;">Net (${currency})</td>
-      <td style="background:#cfe5b3; padding:6px; font-weight:bold; text-align:right;">${formatNumber(quotation.net_amount)}</td>
-    </tr>
-    <tr>
-      <td style="background:#cfe5b3; padding:6px; font-weight:bold;">5% VAT</td>
-      <td style="background:#cfe5b3; padding:6px; font-weight:bold; text-align:right;">${formatNumber(quotation.vat_amount)}</td>
-    </tr>
-    <tr>
-      <td style="background:#cfe5b3; padding:6px; font-weight:bold;">Total</td>
-      <td style="background:#cfe5b3; padding:6px; font-weight:bold; text-align:right;">${formatNumber(quotation.total_amount)}</td>
-    </tr>
-  </table>
-
-  <div class="footer-bar">
-    <span>NAD AL HAMMAR, DUBAI</span>
-    <span>ShajiKhan@7starinternational.com</span>
-    <span>00971 56 506 5566</span>
-  </div>
-</div>
-
-<!-- PAGE 2: Static content (terms, bank, signatures) -->
-<div class="page">
-  <div class="green" style="text-align:center; margin-bottom:10px;">Terms & Conditions</div>
-
-  <div class="terms">
-    • Any change in drawings before fabrication only<br>
-    • Any size change affects cost<br>
-    • NOC & approvals extra as actuals<br>
-    • Utilities by client<br>
-    • Payment 50% advance, 50% on completion<br>
-    • Payment via bank transfer / cheque only
-  </div>
-
-  <div class="green" style="text-align:center; margin:20px 0 10px;">Bank Details</div>
-
-  <div class="bank">
-    ADCB BANK<br>
-    Account: 7 Star International Events LLC SHJ BR<br>
-    IBAN: AE020300012980065820001<br>
-    Swift: ADCBAEAA
-  </div>
-
-  <div class="approval">
-    <div>
-      <b>7 Star International Events LLC</b><br>
-      Approved by: Shaji Mohammed Khan
-    </div>
-    <div>
-      <b>Client</b><br>
-      Signature:
-    </div>
-  </div>
-
-  <div class="footer-bar">
-    <span>Quotation Date: ${formatDate(quotation.quotation_date)}</span>
-    <span>Quotation No: ${escapeHtml(quotation.quotation_number)}</span>
-  </div>
-</div>
-
-</body>
-</html>`;
-
-    } else if (type === 'invoice') {
-      const { data: invoice, error } = await supabase
-        .from('invoices')
-        .select('*, clients(*), invoice_items(*)')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      
-      const currency = getCurrencyCode(invoice.region);
-      
-      // Sort items: main items first by serial_no, then sub-items under their parent
-      const sortedItems = invoice.invoice_items.sort((a: any, b: any) => {
-        // If both are main items, sort by serial_no
-        if (!a.is_sub_item && !b.is_sub_item) {
-          return a.serial_no - b.serial_no;
-        }
-        // If both are sub-items with the same parent, sort by serial_no
-        if (a.is_sub_item && b.is_sub_item && a.parent_serial_no === b.parent_serial_no) {
-          return a.serial_no - b.serial_no;
-        }
-        // Get effective parent for sorting
-        const aParent = a.is_sub_item ? a.parent_serial_no : a.serial_no;
-        const bParent = b.is_sub_item ? b.parent_serial_no : b.serial_no;
-        
-        if (aParent !== bParent) {
-          return aParent - bParent;
-        }
-        // Same parent: main item comes before its sub-items
-        if (!a.is_sub_item) return -1;
-        if (!b.is_sub_item) return 1;
-        return a.serial_no - b.serial_no;
-      });
-      
-      const rows = sortedItems
-        .map((item: any) => {
-          // Generate display serial number (1, 1.1, 1.2, 2, etc.)
-          const displaySerialNo = item.is_sub_item && item.parent_serial_no 
-            ? `${item.parent_serial_no}.${item.serial_no}` 
-            : String(item.serial_no);
-          
-          // Add indentation for sub-items in description
-          const descriptionStyle = item.is_sub_item ? 'padding-left: 15px;' : '';
-          
-          return `
-            <tr>
-              <td class="text-center">${escapeHtml(displaySerialNo)}</td>
-              <td style="${descriptionStyle}">${escapeHtml(item.description)}</td>
-              <td class="text-center">${escapeHtml(item.size) || '-'}</td>
-              <td class="text-center">${item.quantity}</td>
-              <td class="text-right">${formatNumber(item.rate)}</td>
-              <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
-            </tr>
-          `;
-        }).join('');
-
-      html = `<!DOCTYPE html>
+const INVOICE_TEMPLATE = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -491,13 +223,14 @@ td {
   display: flex;
   justify-content: space-between;
 }
+.sub-item { padding-left: 15px; }
 </style>
 </head>
 <body>
 <div class="page">
   <div class="header">
     <div class="logo">
-      <img src="https://ybgxfnykoqaggytachnv.supabase.co/storage/v1/object/public/assets/logo.jpeg" alt="Logo" onerror="this.style.display='none'">
+      <img src="{{LOGO_URL}}" alt="Logo" onerror="this.style.display='none'">
     </div>
     <div class="company">
       <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
@@ -511,48 +244,49 @@ td {
 
   <div class="info">
     <div>
-      Invoice Date: ${formatDate(invoice.invoice_date)}<br>
-      Invoice No: ${escapeHtml(invoice.invoice_number)}<br>
+      Invoice Date: {{INVOICE_DATE}}<br>
+      Invoice No: {{INVOICE_NO}}<br>
       VAT TRN: 104038790200003
     </div>
     <div>
       <b>Client:</b><br>
-      ${escapeHtml(invoice.clients?.name)}
+      {{CLIENT_NAME}}
     </div>
   </div>
 
   <table class="items">
     <thead>
       <tr>
-        <th style="width:6%;">S.No</th>
-        <th style="width:34%;">Description</th>
+        <th style="width:8%;">S.No</th>
+        <th style="width:32%;">Description</th>
         <th style="width:8%;">Size</th>
         <th style="width:10%;">Qty</th>
-        <th style="width:16%;">Rate</th>
-        <th style="width:16%;" class="amount-col">Amount</th>
+        <th style="width:16%;">Rate {{CURRENCY}}</th>
+        <th style="width:16%;" class="amount-col">Amount {{CURRENCY}}</th>
       </tr>
     </thead>
     <tbody>
-      ${rows}
+      {{INVOICE_ROWS}}
     </tbody>
   </table>
 
   <table class="totals">
     <tr>
       <td>Net</td>
-      <td class="text-right">${formatNumber(invoice.net_amount)}</td>
+      <td class="text-right">{{NET}}</td>
     </tr>
     <tr>
       <td>5% VAT</td>
-      <td class="text-right">${formatNumber(invoice.vat_amount)}</td>
+      <td class="text-right">{{VAT}}</td>
     </tr>
     <tr>
       <td>Total</td>
-      <td class="text-right">${formatNumber(invoice.total_amount)}</td>
+      <td class="text-right">{{TOTAL}}</td>
     </tr>
   </table>
 
   <div class="footer">
+    <p><strong>Amount in Words:</strong> {{AMOUNT_WORDS}}</p>
     Confirmed by: Shaji Mohammed Khan<br>
     Signature: ____________________
   </div>
@@ -565,6 +299,458 @@ td {
 </div>
 </body>
 </html>`;
+
+const QUOTATION_TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>7 Star Quotation</title>
+<style>
+@page { size: A4; margin: 18mm; }
+body {
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 12px;
+  color: #000;
+  margin: 0;
+  padding: 0;
+}
+.wrapper {
+  width: 100%;
+  min-height: 260mm;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.logo img {
+  height: 70px;
+}
+.company {
+  text-align: right;
+  font-size: 11px;
+}
+.company b {
+  font-size: 14px;
+}
+.title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+.green-bar {
+  background: #cfe5b3;
+  padding: 6px;
+  font-weight: bold;
+  text-align: center;
+  margin: 6px 0;
+}
+.green-row {
+  background: #cfe5b3;
+  padding: 6px;
+  font-weight: bold;
+}
+.info {
+  font-size: 11px;
+  margin-top: 6px;
+}
+.info div {
+  margin: 3px 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table, th, td {
+  border: 1px solid #000;
+}
+th {
+  background: #e6e6e6;
+  padding: 5px;
+  text-align: center;
+}
+td {
+  padding: 4px;
+  height: 26px;
+}
+.green-col {
+  background: #cfe5b3;
+  font-weight: bold;
+}
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.terms {
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.bank {
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.approval {
+  margin-top: 30px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.footer-bar {
+  position: fixed;
+  bottom: 12mm;
+  left: 18mm;
+  right: 18mm;
+  background: #cfe5b3;
+  padding: 6px;
+  font-size: 10.5px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+.totals-table {
+  width: 40%;
+  margin-left: auto;
+  margin-top: 10px;
+  border: 2px solid #000;
+}
+.totals-table td {
+  background: #cfe5b3;
+  padding: 8px;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="logo">
+      <img src="{{LOGO_URL}}" alt="Logo" onerror="this.style.display='none'">
+    </div>
+    <div class="company">
+      <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
+      P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+      SAIH SHUBAIB 3<br>
+      DUBAI - UAE
+    </div>
+  </div>
+
+  <div class="title">Quotation</div>
+
+  <div class="info">
+    <div><b>CLIENT :</b> {{CLIENT_NAME}}</div>
+    <div><b>Element :</b> {{ELEMENT}}</div>
+  </div>
+
+  <div class="info">
+    <div class="green-row">Quotation Date : {{QUOTATION_DATE}}</div>
+    <div class="green-row">Quotation Number : {{QUOTATION_NO}}</div>
+    <div class="green-row">VAT TRN : 104038790200003</div>
+  </div>
+
+  <table style="margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="width:6%;">S.No</th>
+        <th style="width:34%;">Description</th>
+        <th style="width:8%;">Size</th>
+        <th style="width:10%;">Quantity</th>
+        <th style="width:16%;">Rate {{CURRENCY}}</th>
+        <th style="width:16%;" class="green-col">Amount {{CURRENCY}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{QUOTATION_ROWS}}
+    </tbody>
+  </table>
+
+  <table class="totals-table">
+    <tr>
+      <td>Net Amount ({{CURRENCY}})</td>
+      <td class="text-right">{{NET_AMOUNT}}</td>
+    </tr>
+    <tr>
+      <td>5% VAT</td>
+      <td class="text-right">{{VAT}}</td>
+    </tr>
+    <tr>
+      <td>Total</td>
+      <td class="text-right">{{TOTAL}}</td>
+    </tr>
+  </table>
+
+  <div class="green-bar">Terms & Conditions</div>
+
+  <div class="terms">
+    • Any Change in working drawings should be given before the fabrication has started<br>
+    • Any Change in size will have cost implications<br>
+    • Any NOC's from Municipality, Horticulture & DEWA/SEWA/FEWA are additions costs as per actuals.<br>
+    • Economic Department approvals to be obtained by 7 Star International fees to be paid by Client.<br>
+    • All site Utilities (Water, Electrical and Telephone) to be provided by Client.<br>
+    • Enclosed storage area to be provided by client for storing the finished work till the time of Installation.<br>
+    • Variation to any of the above information must be confirmed in writing by the officials.<br>
+    • Payment Terms 50% advance along with order confirmation and 50% upon completion of project.<br>
+    • The payment will be accepted only via Transfer & Cheques to our Bank Account.
+  </div>
+
+  <div class="green-bar">Bank Details</div>
+
+  <div class="bank">
+    • ADCB BANK<br>
+    • Account name - 7 Star International Events LLC SHJ BR<br>
+    • Iban - AE020300012980065820001<br>
+    • A/c no - 12980065820001<br>
+    • Swiftcode - ADCBAEAA<br>
+    • Branch - Abu Dhabi Main Branch
+  </div>
+
+  <div class="approval">
+    <div>
+      <b>7 Star International Events LLC</b><br>
+      Approved by : Shaji Mohammed Khan<br>
+      Signature :
+    </div>
+    <div>
+      <b>Client</b><br>
+      Approved by :<br>
+      Signature :
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <div>NAD AL HAMMAR, DUBAI, UAE.</div>
+    <div>ShajiKhan@7StarInternational.com</div>
+    <div>00971 56 506 5566</div>
+  </div>
+</div>
+</body>
+</html>`;
+
+const LEDGER_TEMPLATE = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Statement of Account</title>
+<style>
+body { font-family: Arial; font-size: 12px; margin: 25px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+th, td { border: 1px solid black; padding: 6px; }
+.center { text-align: center; }
+.right { text-align: right; }
+</style>
+</head>
+<body>
+
+<h3 class="center">7 STAR INTERNATIONAL EVENTS LLC</h3>
+<p class="center">
+92A-J01, WHP2 - BLOCK A COMMERCIAL<br>
+SAIH SHUBAIB 3<br>
+DUBAI - UAE
+</p>
+
+<h4 class="center">{{CLIENT_NAME}}</h4>
+<h3 class="center">LEDGER ACCOUNT</h3>
+<p class="center">{{FROM_DATE}} to {{TO_DATE}}</p>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Particulars</th>
+<th>INV Type</th>
+<th>INV No.</th>
+<th>Debit ({{CURRENCY}})</th>
+<th>Credit ({{CURRENCY}})</th>
+</tr>
+</thead>
+<tbody>
+{{LEDGER_ROWS}}
+</tbody>
+</table>
+
+<table>
+<tr>
+<td class="right"><strong>Closing Balance</strong></td>
+<td class="right">{{CLOSING_BALANCE}}</td>
+</tr>
+</table>
+
+<p><strong>NOTE:</strong> Closing balance as on today in {{CURRENCY}} {{CLOSING_BALANCE}}</p>
+
+<p>
+<strong>Bank Details:</strong><br>
+ADCB BANK<br>
+IBAN: AE020030012980065820001
+</p>
+
+</body>
+</html>`;
+
+// ============================================
+// Template replacement function
+// ============================================
+
+function replaceTemplatePlaceholders(template: string, data: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(data)) {
+    const placeholder = `{{${key}}}`;
+    result = result.split(placeholder).join(value);
+  }
+  return result;
+}
+
+// ============================================
+// Main server handler
+// ============================================
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Authenticate the request
+    const authResult = await authenticateRequest(req, supabaseUrl, supabaseAnonKey);
+    if ('error' in authResult) {
+      return new Response(
+        JSON.stringify({ error: authResult.error }),
+        { status: authResult.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { type, id, clientId, fromDate, toDate } = await req.json();
+    
+    // Use service key for data access after authentication is verified
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    let html = '';
+
+    if (type === 'quotation') {
+      const { data: quotation, error } = await supabase
+        .from('quotations')
+        .select('*, clients(*), quotation_items(*)')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      const currency = getCurrencyCode(quotation.region);
+      
+      // Generate rows HTML
+      const rows = quotation.quotation_items
+        .sort((a: any, b: any) => a.serial_no - b.serial_no)
+        .map((item: any) => `
+          <tr>
+            <td class="text-center">${escapeHtml(String(item.serial_no))}</td>
+            <td>${escapeHtml(item.description)}</td>
+            <td class="text-center">${escapeHtml(item.size) || '-'}</td>
+            <td class="text-center">${item.quantity}</td>
+            <td class="text-right">${formatNumber(item.rate)}</td>
+            <td class="text-right green-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
+          </tr>
+        `).join('');
+
+      // Generate empty rows to fill the table
+      const emptyRowCount = Math.max(0, 10 - quotation.quotation_items.length);
+      const emptyRows = Array(emptyRowCount).fill(`
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td class="green-col">&nbsp;</td>
+        </tr>
+      `).join('');
+
+      // Replace placeholders
+      html = replaceTemplatePlaceholders(QUOTATION_TEMPLATE, {
+        LOGO_URL: LOGO_URL,
+        CLIENT_NAME: escapeHtml(quotation.clients?.name || ''),
+        ELEMENT: escapeHtml(quotation.element) || '-',
+        QUOTATION_DATE: formatDate(quotation.quotation_date),
+        QUOTATION_NO: escapeHtml(quotation.quotation_number),
+        CURRENCY: currency,
+        QUOTATION_ROWS: rows + emptyRows,
+        NET_AMOUNT: formatNumber(quotation.net_amount),
+        VAT: formatNumber(quotation.vat_amount),
+        TOTAL: formatNumber(quotation.total_amount),
+      });
+
+    } else if (type === 'invoice') {
+      const { data: invoice, error } = await supabase
+        .from('invoices')
+        .select('*, clients(*), invoice_items(*)')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      const currency = getCurrencyCode(invoice.region);
+      
+      // Sort items: main items first by serial_no, then sub-items under their parent
+      const sortedItems = invoice.invoice_items.sort((a: any, b: any) => {
+        // If both are main items, sort by serial_no
+        if (!a.is_sub_item && !b.is_sub_item) {
+          return a.serial_no - b.serial_no;
+        }
+        // If both are sub-items with the same parent, sort by serial_no
+        if (a.is_sub_item && b.is_sub_item && a.parent_serial_no === b.parent_serial_no) {
+          return a.serial_no - b.serial_no;
+        }
+        // Get effective parent for sorting
+        const aParent = a.is_sub_item ? a.parent_serial_no : a.serial_no;
+        const bParent = b.is_sub_item ? b.parent_serial_no : b.serial_no;
+        
+        if (aParent !== bParent) {
+          return aParent - bParent;
+        }
+        // Same parent: main item comes before its sub-items
+        if (!a.is_sub_item) return -1;
+        if (!b.is_sub_item) return 1;
+        return a.serial_no - b.serial_no;
+      });
+      
+      // Generate rows HTML with hierarchical numbering
+      const rows = sortedItems
+        .map((item: any) => {
+          // Generate display serial number (1, 1.1, 1.2, 2, etc.)
+          const displaySerialNo = item.is_sub_item && item.parent_serial_no 
+            ? `${item.parent_serial_no}.${item.serial_no}` 
+            : String(item.serial_no);
+          
+          // Add sub-item class for indentation
+          const descriptionClass = item.is_sub_item ? 'class="sub-item"' : '';
+          
+          return `
+            <tr>
+              <td class="text-center">${escapeHtml(displaySerialNo)}</td>
+              <td ${descriptionClass}>${escapeHtml(item.description)}</td>
+              <td class="text-center">${escapeHtml(item.size) || '-'}</td>
+              <td class="text-center">${item.quantity}</td>
+              <td class="text-right">${formatNumber(item.rate)}</td>
+              <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
+            </tr>
+          `;
+        }).join('');
+
+      // Replace placeholders
+      html = replaceTemplatePlaceholders(INVOICE_TEMPLATE, {
+        LOGO_URL: LOGO_URL,
+        INVOICE_DATE: formatDate(invoice.invoice_date),
+        INVOICE_NO: escapeHtml(invoice.invoice_number),
+        CLIENT_NAME: escapeHtml(invoice.clients?.name || ''),
+        CURRENCY: currency,
+        INVOICE_ROWS: rows,
+        NET: formatNumber(invoice.net_amount),
+        VAT: formatNumber(invoice.vat_amount),
+        TOTAL: formatNumber(invoice.total_amount),
+        AMOUNT_WORDS: numberToWords(invoice.total_amount, invoice.region),
+      });
 
     } else if (type === 'ledger') {
       // Fetch client info
@@ -654,65 +840,15 @@ td {
         `;
       }).join('');
 
-      html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Statement of Account</title>
-<style>
-body { font-family: Arial; font-size: 12px; margin: 25px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-th, td { border: 1px solid black; padding: 6px; }
-.center { text-align: center; }
-.right { text-align: right; }
-</style>
-</head>
-<body>
-
-<h3 class="center">7 STAR INTERNATIONAL EVENTS LLC</h3>
-<p class="center">
-92A-J01, WHP2 - BLOCK A COMMERCIAL<br>
-SAIH SHUBAIB 3<br>
-DUBAI - UAE
-</p>
-
-<h4 class="center">${escapeHtml(client.name)}</h4>
-<h3 class="center">LEDGER ACCOUNT</h3>
-<p class="center">${fromDate ? formatDate(fromDate) : 'Beginning'} to ${toDate ? formatDate(toDate) : 'Today'}</p>
-
-<table>
-<thead>
-<tr>
-<th>Date</th>
-<th>Particulars</th>
-<th>INV Type</th>
-<th>INV No.</th>
-<th>Debit (${currency})</th>
-<th>Credit (${currency})</th>
-</tr>
-</thead>
-<tbody>
-${rows}
-</tbody>
-</table>
-
-<table>
-<tr>
-<td class="right"><strong>Closing Balance</strong></td>
-<td class="right">${formatNumber(closingBalance)} ${currency}</td>
-</tr>
-</table>
-
-<p><strong>NOTE:</strong> Closing balance as on today in ${currency} ${formatNumber(closingBalance)}</p>
-
-<p>
-<strong>Bank Details:</strong><br>
-ADCB BANK<br>
-IBAN: AE020030012980065820001
-</p>
-
-</body>
-</html>`;
+      // Replace placeholders
+      html = replaceTemplatePlaceholders(LEDGER_TEMPLATE, {
+        CLIENT_NAME: escapeHtml(client.name),
+        FROM_DATE: fromDate ? formatDate(fromDate) : 'Beginning',
+        TO_DATE: toDate ? formatDate(toDate) : 'Today',
+        CURRENCY: currency,
+        LEDGER_ROWS: rows,
+        CLOSING_BALANCE: formatNumber(closingBalance),
+      });
 
     } else {
       throw new Error('Invalid document type');
