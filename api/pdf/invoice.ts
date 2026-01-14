@@ -20,11 +20,16 @@ export default async function handler(
       }
     );
 
-    if (!railwayResponse.ok) {
-      const text = await railwayResponse.text();
-      console.error(text);
-      return res.status(500).send("PDF service failed");
-    }
+   if (!railwayResponse.ok) {
+  const text = await railwayResponse.text();
+  console.error("Railway error:", text);
+  return res.status(500).json({
+    error: "PDF service failed",
+    railwayStatus: railwayResponse.status,
+    railwayBody: text,
+  });
+}
+
 
     const buffer = Buffer.from(await railwayResponse.arrayBuffer());
 
