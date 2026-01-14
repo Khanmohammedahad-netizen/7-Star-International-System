@@ -24,41 +24,38 @@ export function usePdfDownload() {
     setIsLoading(true);
 
     try {
-      let endpoint = '';
+      let apiUrl = '';
 
       if (type === 'invoice') {
-        endpoint = 'generate-invoice';
+        apiUrl = '/api/pdf/invoice';
       } else if (type === 'quotation') {
-        endpoint = 'generate-quotation';
+        apiUrl = '/api/pdf/quotation';
       } else {
         toast.error('Ledger PDF not supported yet');
         return;
       }
 
-      const response = await fetch(
-        'https://7-star-pdf-service-production.up.railway.app/' + endpoint,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id,
-            clientId,
-            fromDate,
-            toDate,
-          }),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          clientId,
+          fromDate,
+          toDate,
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error('Railway PDF generation failed');
+        throw new Error('PDF generation failed');
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
 
-      // ✅ OPEN REAL PDF (NO HTML, NO PRINT)
+      // ✅ Opens REAL PDF (no CORS, no HTML, no print)
       window.open(url, '_blank');
 
       toast.success('PDF downloaded successfully');
