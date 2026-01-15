@@ -116,11 +116,8 @@ async function authenticateRequest(req: Request, supabaseUrl: string, supabaseAn
   return { user, userRole: userRole.role };
 }
 
-// Logo URL for PDF generation
-const LOGO_URL = 'https://ybgxfnykoqaggytachnv.supabase.co/storage/v1/object/public/assets/logo.jpeg';
-
 // ============================================
-// HTML Templates with Placeholders
+// HTML Templates - EXACT USER-PROVIDED TEMPLATES
 // ============================================
 
 const INVOICE_TEMPLATE = `<!DOCTYPE html>
@@ -128,401 +125,269 @@ const INVOICE_TEMPLATE = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <title>Tax Invoice</title>
+
 <style>
-html, body {
-  width: 210mm;
-  height: 297mm;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+@page {
+  size: A4;
+  margin: 20mm;
 }
-@page { size: A4; margin: 18mm; }
+
 body {
-  font-family: Calibri, Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
+  color: #000;
 }
-.page {
-  width: 174mm;
-  height: 261mm;
-  position: relative;
-}
+
 .header {
-  display: flex;
-  justify-content: space-between;
+  text-align: left;
 }
-.logo img { height: 65px; }
-.company {
-  text-align: right;
-  font-size: 11px;
+
+.company-name {
+  font-weight: bold;
+  font-size: 14px;
 }
+
 .title {
   text-align: center;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
-  margin: 6px 0;
+  margin: 10px 0;
 }
-.green-bar {
-  height: 22px;
-  background: #cfe5b3;
-  margin-bottom: 8px;
-}
-.info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-}
-table {
+
+.info-table, .items-table, .totals-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 8px;
+  margin-top: 10px;
 }
-table, th, td {
+
+.info-table td {
+  padding: 3px;
+  vertical-align: top;
+}
+
+.items-table th, .items-table td {
   border: 1px solid #000;
-}
-th {
-  background: #e6e6e6;
-  padding: 5px;
-}
-td {
-  height: 26px;
-  padding: 4px;
-}
-.amount-col {
-  background: #cfe5b3;
-  font-weight: bold;
-}
-.items {
-  height: 420px;
-}
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-.totals {
-  width: 32%;
-  position: absolute;
-  right: 0;
-  bottom: 90px;
-}
-.totals td {
-  background: #cfe5b3;
-  font-weight: bold;
   padding: 6px;
 }
+
+.items-table th {
+  font-weight: bold;
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.totals-table {
+  width: 40%;
+  float: left;
+  margin-top: 15px;
+}
+
+.totals-table td {
+  border: 1px solid #000;
+  padding: 6px;
+}
+
+.clear {
+  clear: both;
+}
+
 .footer {
-  position: absolute;
-  bottom: 40px;
-  font-size: 11px;
+  margin-top: 20px;
 }
-.footer-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #cfe5b3;
-  padding: 6px;
-  font-size: 10.5px;
-  display: flex;
-  justify-content: space-between;
-}
-.sub-item { padding-left: 15px; }
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="header">
-    <div class="logo">
-      <img src="{{LOGO_URL}}" alt="Logo" onerror="this.style.display='none'">
-    </div>
-    <div class="company">
-      <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
-      P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-      SAIH SHUBAIB 3<br>DUBAI - UAE
-    </div>
-  </div>
 
-  <div class="title">Tax Invoice</div>
-  <div class="green-bar"></div>
-
-  <div class="info">
-    <div>
-      Invoice Date: {{INVOICE_DATE}}<br>
-      Invoice No: {{INVOICE_NO}}<br>
-      VAT TRN: 104038790200003
-    </div>
-    <div>
-      <b>Client:</b><br>
-      {{CLIENT_NAME}}
-    </div>
-  </div>
-
-  <table class="items">
-    <thead>
-      <tr>
-        <th style="width:8%;">S.No</th>
-        <th style="width:32%;">Description</th>
-        <th style="width:8%;">Size</th>
-        <th style="width:10%;">Qty</th>
-        <th style="width:16%;">Rate {{CURRENCY}}</th>
-        <th style="width:16%;" class="amount-col">Amount {{CURRENCY}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{INVOICE_ROWS}}
-    </tbody>
-  </table>
-
-  <table class="totals">
-    <tr>
-      <td>Net</td>
-      <td class="text-right">{{NET}}</td>
-    </tr>
-    <tr>
-      <td>5% VAT</td>
-      <td class="text-right">{{VAT}}</td>
-    </tr>
-    <tr>
-      <td>Total</td>
-      <td class="text-right">{{TOTAL}}</td>
-    </tr>
-  </table>
-
-  <div class="footer">
-    <p><strong>Amount in Words:</strong> {{AMOUNT_WORDS}}</p>
-    Confirmed by: Shaji Mohammed Khan<br>
-    Signature: ____________________
-  </div>
-
-  <div class="footer-bar">
-    <span>NAD AL HAMMAR, DUBAI, UAE</span>
-    <span>info@7starinternational.com</span>
-    <span>+971 56 506 5566</span>
-  </div>
+<div class="header">
+  <span class="company-name">7 STAR INTERNATIONAL EVENTS L.L.C</span><br>
+  P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+  SAIH SHUBAIB 3<br>
+  DUBAI - UAE
 </div>
+
+<div class="title">Tax Invoice</div>
+
+<table class="info-table">
+  <tr>
+    <td>Invoice Date: {{INVOICE_DATE}}</td>
+  </tr>
+  <tr>
+    <td>Invoice No: {{INVOICE_NO}}</td>
+  </tr>
+  <tr>
+    <td>VAT TRN: 104038790200003</td>
+  </tr>
+  <tr>
+    <td>Client: {{CLIENT_NAME}}</td>
+  </tr>
+</table>
+
+<table class="items-table">
+  <thead>
+    <tr>
+      <th>S.No</th>
+      <th>Description</th>
+      <th>Size</th>
+      <th>Qty</th>
+      <th>Rate AED</th>
+      <th>Amount AED</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{INVOICE_ROWS}}
+  </tbody>
+</table>
+
+<table class="totals-table">
+  <tr>
+    <td class="text-right">Net</td>
+    <td class="text-right">{{NET}}</td>
+  </tr>
+  <tr>
+    <td class="text-right">5% VAT</td>
+    <td class="text-right">{{VAT}}</td>
+  </tr>
+  <tr>
+    <td class="text-right"><strong>Total</strong></td>
+    <td class="text-right"><strong>{{TOTAL}}</strong></td>
+  </tr>
+</table>
+
+<div class="clear"></div>
+
+<p>Amount in Words: {{AMOUNT_WORDS}}</p>
+
+<div class="footer">
+  <p>
+    Confirmed by: Shaji Mohammed Khan<br>
+    Signature: ___________________
+  </p>
+  <p>
+    NAD AL HAMMAR, DUBAI, UAE<br>
+    info@7starinternational.com | +971 56 506 5566
+  </p>
+</div>
+
 </body>
 </html>`;
 
 const QUOTATION_TEMPLATE = `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>7 Star Quotation</title>
+<title>Quotation</title>
+
 <style>
-@page { size: A4; margin: 18mm; }
+@page {
+  size: A4;
+  margin: 20mm;
+}
+
 body {
-  font-family: Calibri, Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
   color: #000;
-  margin: 0;
-  padding: 0;
 }
-.wrapper {
-  width: 100%;
-  min-height: 260mm;
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-.logo img {
-  height: 70px;
-}
-.company {
-  text-align: right;
-  font-size: 11px;
-}
-.company b {
-  font-size: 14px;
-}
+
 .title {
   text-align: center;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
-  margin: 8px 0;
+  margin: 10px 0;
 }
-.green-bar {
-  background: #cfe5b3;
-  padding: 6px;
-  font-weight: bold;
-  text-align: center;
-  margin: 6px 0;
-}
-.green-row {
-  background: #cfe5b3;
-  padding: 6px;
-  font-weight: bold;
-}
-.info {
-  font-size: 11px;
-  margin-top: 6px;
-}
-.info div {
-  margin: 3px 0;
-}
+
 table {
   width: 100%;
   border-collapse: collapse;
-}
-table, th, td {
-  border: 1px solid #000;
-}
-th {
-  background: #e6e6e6;
-  padding: 5px;
-  text-align: center;
-}
-td {
-  padding: 4px;
-  height: 26px;
-}
-.green-col {
-  background: #cfe5b3;
-  font-weight: bold;
-}
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-.terms {
-  font-size: 11px;
-  line-height: 1.6;
-  margin-top: 8px;
-}
-.bank {
-  font-size: 11px;
-  line-height: 1.6;
-  margin-top: 8px;
-}
-.approval {
-  margin-top: 30px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-}
-.footer-bar {
-  position: fixed;
-  bottom: 12mm;
-  left: 18mm;
-  right: 18mm;
-  background: #cfe5b3;
-  padding: 6px;
-  font-size: 10.5px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-}
-.totals-table {
-  width: 40%;
-  margin-left: auto;
   margin-top: 10px;
-  border: 2px solid #000;
 }
-.totals-table td {
-  background: #cfe5b3;
-  padding: 8px;
+
+th, td {
+  border: 1px solid #000;
+  padding: 6px;
+}
+
+th {
   font-weight: bold;
+}
+
+.no-border td {
+  border: none;
+}
+
+.text-right {
+  text-align: right;
 }
 </style>
 </head>
 <body>
-<div class="wrapper">
-  <div class="header">
-    <div class="logo">
-      <img src="{{LOGO_URL}}" alt="Logo" onerror="this.style.display='none'">
-    </div>
-    <div class="company">
-      <b>7 STAR INTERNATIONAL EVENTS L.L.C</b><br>
-      P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-      SAIH SHUBAIB 3<br>
-      DUBAI - UAE
-    </div>
-  </div>
 
-  <div class="title">Quotation</div>
-
-  <div class="info">
-    <div><b>CLIENT :</b> {{CLIENT_NAME}}</div>
-    <div><b>Element :</b> {{ELEMENT}}</div>
-  </div>
-
-  <div class="info">
-    <div class="green-row">Quotation Date : {{QUOTATION_DATE}}</div>
-    <div class="green-row">Quotation Number : {{QUOTATION_NO}}</div>
-    <div class="green-row">VAT TRN : 104038790200003</div>
-  </div>
-
-  <table style="margin-top: 10px;">
-    <thead>
-      <tr>
-        <th style="width:6%;">S.No</th>
-        <th style="width:34%;">Description</th>
-        <th style="width:8%;">Size</th>
-        <th style="width:10%;">Quantity</th>
-        <th style="width:16%;">Rate {{CURRENCY}}</th>
-        <th style="width:16%;" class="green-col">Amount {{CURRENCY}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{QUOTATION_ROWS}}
-    </tbody>
-  </table>
-
-  <table class="totals-table">
-    <tr>
-      <td>Net Amount ({{CURRENCY}})</td>
-      <td class="text-right">{{NET_AMOUNT}}</td>
-    </tr>
-    <tr>
-      <td>5% VAT</td>
-      <td class="text-right">{{VAT}}</td>
-    </tr>
-    <tr>
-      <td>Total</td>
-      <td class="text-right">{{TOTAL}}</td>
-    </tr>
-  </table>
-
-  <div class="green-bar">Terms & Conditions</div>
-
-  <div class="terms">
-    • Any Change in working drawings should be given before the fabrication has started<br>
-    • Any Change in size will have cost implications<br>
-    • Any NOC's from Municipality, Horticulture & DEWA/SEWA/FEWA are additions costs as per actuals.<br>
-    • Economic Department approvals to be obtained by 7 Star International fees to be paid by Client.<br>
-    • All site Utilities (Water, Electrical and Telephone) to be provided by Client.<br>
-    • Enclosed storage area to be provided by client for storing the finished work till the time of Installation.<br>
-    • Variation to any of the above information must be confirmed in writing by the officials.<br>
-    • Payment Terms 50% advance along with order confirmation and 50% upon completion of project.<br>
-    • The payment will be accepted only via Transfer & Cheques to our Bank Account.
-  </div>
-
-  <div class="green-bar">Bank Details</div>
-
-  <div class="bank">
-    • ADCB BANK<br>
-    • Account name - 7 Star International Events LLC SHJ BR<br>
-    • Iban - AE020300012980065820001<br>
-    • A/c no - 12980065820001<br>
-    • Swiftcode - ADCBAEAA<br>
-    • Branch - Abu Dhabi Main Branch
-  </div>
-
-  <div class="approval">
-    <div>
-      <b>7 Star International Events LLC</b><br>
-      Approved by : Shaji Mohammed Khan<br>
-      Signature :
-    </div>
-    <div>
-      <b>Client</b><br>
-      Approved by :<br>
-      Signature :
-    </div>
-  </div>
-
-  <div class="footer-bar">
-    <div>NAD AL HAMMAR, DUBAI, UAE.</div>
-    <div>ShajiKhan@7StarInternational.com</div>
-    <div>00971 56 506 5566</div>
-  </div>
+<div class="header">
+  <strong>7 STAR INTERNATIONAL EVENTS L.L.C</strong><br>
+  P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+  SAIH SHUBAIB 3<br>
+  DUBAI - UAE
 </div>
+
+<div class="title">Quotation</div>
+
+<table class="no-border">
+  <tr>
+    <td>Client:</td>
+    <td>{{CLIENT_NAME}}</td>
+  </tr>
+  <tr>
+    <td>Element:</td>
+    <td>{{ELEMENT}}</td>
+  </tr>
+  <tr>
+    <td>Date:</td>
+    <td>{{QUOTATION_DATE}}</td>
+  </tr>
+  <tr>
+    <td>Quotation No:</td>
+    <td>{{QUOTATION_NO}}</td>
+  </tr>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>S.No</th>
+      <th>Description</th>
+      <th>Size</th>
+      <th>Qty</th>
+      <th>Rate AED</th>
+      <th>Amount AED</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{QUOTATION_ROWS}}
+  </tbody>
+</table>
+
+<table class="no-border">
+  <tr>
+    <td class="text-right">Net</td>
+    <td class="text-right">{{NET_AMOUNT}}</td>
+  </tr>
+  <tr>
+    <td class="text-right">5% VAT</td>
+    <td class="text-right">{{VAT}}</td>
+  </tr>
+  <tr>
+    <td class="text-right"><strong>Total</strong></td>
+    <td class="text-right"><strong>{{TOTAL}}</strong></td>
+  </tr>
+</table>
+
+<p><strong>Terms & Conditions</strong></p>
+<p>50% advance, balance on completion<br>
+Any change affects cost</p>
+
 </body>
 </html>`;
 
@@ -638,44 +503,27 @@ serve(async (req) => {
       
       if (error) throw error;
       
-      const currency = getCurrencyCode(quotation.region);
-      
       // Generate rows HTML
       const rows = quotation.quotation_items
         .sort((a: any, b: any) => a.serial_no - b.serial_no)
         .map((item: any) => `
           <tr>
-            <td class="text-center">${escapeHtml(String(item.serial_no))}</td>
+            <td style="text-align: center;">${escapeHtml(String(item.serial_no))}</td>
             <td>${escapeHtml(item.description)}</td>
-            <td class="text-center">${escapeHtml(item.size) || '-'}</td>
-            <td class="text-center">${item.quantity}</td>
-            <td class="text-right">${formatNumber(item.rate)}</td>
-            <td class="text-right green-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
+            <td style="text-align: center;">${escapeHtml(item.size) || '-'}</td>
+            <td style="text-align: center;">${item.quantity}</td>
+            <td style="text-align: right;">${formatNumber(item.rate)}</td>
+            <td style="text-align: right;">${formatNumber(item.amount || item.quantity * item.rate)}</td>
           </tr>
         `).join('');
 
-      // Generate empty rows to fill the table
-      const emptyRowCount = Math.max(0, 10 - quotation.quotation_items.length);
-      const emptyRows = Array(emptyRowCount).fill(`
-        <tr>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td>&nbsp;</td>
-          <td class="green-col">&nbsp;</td>
-        </tr>
-      `).join('');
-
       // Replace placeholders
       html = replaceTemplatePlaceholders(QUOTATION_TEMPLATE, {
-        LOGO_URL: LOGO_URL,
         CLIENT_NAME: escapeHtml(quotation.clients?.name || ''),
         ELEMENT: escapeHtml(quotation.element) || '-',
         QUOTATION_DATE: formatDate(quotation.quotation_date),
         QUOTATION_NO: escapeHtml(quotation.quotation_number),
-        CURRENCY: currency,
-        QUOTATION_ROWS: rows + emptyRows,
+        QUOTATION_ROWS: rows,
         NET_AMOUNT: formatNumber(quotation.net_amount),
         VAT: formatNumber(quotation.vat_amount),
         TOTAL: formatNumber(quotation.total_amount),
@@ -689,8 +537,6 @@ serve(async (req) => {
         .single();
       
       if (error) throw error;
-      
-      const currency = getCurrencyCode(invoice.region);
       
       // Sort items: main items first by serial_no, then sub-items under their parent
       const sortedItems = invoice.invoice_items.sort((a: any, b: any) => {
@@ -723,28 +569,23 @@ serve(async (req) => {
             ? `${item.parent_serial_no}.${item.serial_no}` 
             : String(item.serial_no);
           
-          // Add sub-item class for indentation
-          const descriptionClass = item.is_sub_item ? 'class="sub-item"' : '';
-          
           return `
             <tr>
-              <td class="text-center">${escapeHtml(displaySerialNo)}</td>
-              <td ${descriptionClass}>${escapeHtml(item.description)}</td>
-              <td class="text-center">${escapeHtml(item.size) || '-'}</td>
-              <td class="text-center">${item.quantity}</td>
-              <td class="text-right">${formatNumber(item.rate)}</td>
-              <td class="text-right amount-col">${formatNumber(item.amount || item.quantity * item.rate)}</td>
+              <td style="text-align: center;">${escapeHtml(displaySerialNo)}</td>
+              <td>${escapeHtml(item.description)}</td>
+              <td style="text-align: center;">${escapeHtml(item.size) || '-'}</td>
+              <td style="text-align: center;">${item.quantity}</td>
+              <td style="text-align: right;">${formatNumber(item.rate)}</td>
+              <td style="text-align: right;">${formatNumber(item.amount || item.quantity * item.rate)}</td>
             </tr>
           `;
         }).join('');
 
       // Replace placeholders
       html = replaceTemplatePlaceholders(INVOICE_TEMPLATE, {
-        LOGO_URL: LOGO_URL,
         INVOICE_DATE: formatDate(invoice.invoice_date),
         INVOICE_NO: escapeHtml(invoice.invoice_number),
         CLIENT_NAME: escapeHtml(invoice.clients?.name || ''),
-        CURRENCY: currency,
         INVOICE_ROWS: rows,
         NET: formatNumber(invoice.net_amount),
         VAT: formatNumber(invoice.vat_amount),
