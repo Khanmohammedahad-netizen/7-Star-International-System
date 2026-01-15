@@ -117,6 +117,12 @@ async function authenticateRequest(req: Request, supabaseUrl: string, supabaseAn
 }
 
 // ============================================
+// Company Logo - Base64 Encoded
+// ============================================
+
+const COMPANY_LOGO_BASE64 = `data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMCwsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAGQASwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD9U6KKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/9k=`;
+
+// ============================================
 // HTML Templates - EXACT USER-PROVIDED TEMPLATES
 // ============================================
 
@@ -139,6 +145,18 @@ body {
 }
 
 .header {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.header-logo {
+  width: 80px;
+  height: auto;
+}
+
+.header-info {
   text-align: left;
 }
 
@@ -202,10 +220,13 @@ body {
 <body>
 
 <div class="header">
-  <span class="company-name">7 STAR INTERNATIONAL EVENTS L.L.C</span><br>
-  P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-  SAIH SHUBAIB 3<br>
-  DUBAI - UAE
+  <img src="{{LOGO_BASE64}}" alt="Company Logo" class="header-logo" />
+  <div class="header-info">
+    <span class="company-name">7 STAR INTERNATIONAL EVENTS L.L.C</span><br>
+    P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+    SAIH SHUBAIB 3<br>
+    DUBAI - UAE
+  </div>
 </div>
 
 <div class="title">Tax Invoice</div>
@@ -292,6 +313,22 @@ body {
   color: #000;
 }
 
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.header-logo {
+  width: 80px;
+  height: auto;
+}
+
+.header-info {
+  text-align: left;
+}
+
 .title {
   text-align: center;
   font-size: 16px;
@@ -326,10 +363,13 @@ th {
 <body>
 
 <div class="header">
-  <strong>7 STAR INTERNATIONAL EVENTS L.L.C</strong><br>
-  P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
-  SAIH SHUBAIB 3<br>
-  DUBAI - UAE
+  <img src="{{LOGO_BASE64}}" alt="Company Logo" class="header-logo" />
+  <div class="header-info">
+    <strong>7 STAR INTERNATIONAL EVENTS L.L.C</strong><br>
+    P2A-J01, WHP2-BLOCK-A COMMERCIAL<br>
+    SAIH SHUBAIB 3<br>
+    DUBAI - UAE
+  </div>
 </div>
 
 <div class="title">Quotation</div>
@@ -519,6 +559,7 @@ serve(async (req) => {
 
       // Replace placeholders
       html = replaceTemplatePlaceholders(QUOTATION_TEMPLATE, {
+        LOGO_BASE64: COMPANY_LOGO_BASE64,
         CLIENT_NAME: escapeHtml(quotation.clients?.name || ''),
         ELEMENT: escapeHtml(quotation.element) || '-',
         QUOTATION_DATE: formatDate(quotation.quotation_date),
@@ -583,6 +624,7 @@ serve(async (req) => {
 
       // Replace placeholders
       html = replaceTemplatePlaceholders(INVOICE_TEMPLATE, {
+        LOGO_BASE64: COMPANY_LOGO_BASE64,
         INVOICE_DATE: formatDate(invoice.invoice_date),
         INVOICE_NO: escapeHtml(invoice.invoice_number),
         CLIENT_NAME: escapeHtml(invoice.clients?.name || ''),
