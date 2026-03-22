@@ -1,0 +1,46 @@
+﻿src/app/dashboard/contacts/page.tsx(15,20): error TS2307: Cannot find module 'lottie-react' or its corresponding type declarations.
+src/app/dashboard/contacts/page.tsx(139,35): error TS7006: Parameter 'contact' implicitly has an 'any' type.
+src/app/dashboard/page.tsx(78,21): error TS2322: Type '{ value: number; isPositive: true; text: string; }' is not assignable to type '"up" | "down" | "neutral" | undefined'.
+src/app/dashboard/page.tsx(84,21): error TS2322: Type '{ value: number; isPositive: true; text: string; }' is not assignable to type '"up" | "down" | "neutral" | undefined'.
+src/app/dashboard/page.tsx(90,21): error TS2322: Type '{ value: number; isPositive: false; text: string; }' is not assignable to type '"up" | "down" | "neutral" | undefined'.
+src/app/dashboard/page.tsx(96,21): error TS2322: Type '{ value: number; isPositive: true; text: string; }' is not assignable to type '"up" | "down" | "neutral" | undefined'.
+src/app/dashboard/page.tsx(128,41): error TS2322: Type '(val: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(val: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'val' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/app/dashboard/reports/page.tsx(88,41): error TS2322: Type '(val: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(val: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'val' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/app/dashboard/reports/page.tsx(132,155): error TS2322: Type '(val: number) => [string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(val: number) => [string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'val' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/components/blocks/DataTableWrapper.tsx(45,19): error TS2322: Type '{ placeholder: string; leftIcon: Element; onChange: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & AppInputProps & RefAttributes<HTMLInputElement>'.
+  Property 'placeholder' does not exist on type 'IntrinsicAttributes & AppInputProps & RefAttributes<HTMLInputElement>'.
+src/components/blocks/DataTableWrapper.tsx(47,30): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/mode-toggle.tsx(13,8): error TS2307: Cannot find module '@/components/ui/dropdown' or its corresponding type declarations.
+src/components/mode-toggle.tsx(21,17): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "ghost" | "danger" | undefined'.
+src/components/mode-toggle.tsx(21,35): error TS2322: Type '"icon"' is not assignable to type '"sm" | "md" | "lg" | undefined'.
+src/components/primitives/AppCard.tsx(4,28): error TS2305: Module '"@/components/ui/card"' has no exported member 'CardFooter'.
+src/components/primitives/AppCard.tsx(4,40): error TS2305: Module '"@/components/ui/card"' has no exported member 'CardTitle'.
+src/components/primitives/AppCard.tsx(4,51): error TS2305: Module '"@/components/ui/card"' has no exported member 'CardDescription'.
+src/components/primitives/AppCard.tsx(28,9): error TS2322: Type '{ children: (false | "" | 0 | 0n | Element | null | undefined)[]; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 274 more ...; className: string; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
+  Property 'ref' does not exist on type 'IntrinsicAttributes & CardProps'.
+src/components/primitives/AppInput.tsx(4,17): error TS2459: Module '"@/components/ui/input"' declares 'InputProps' locally, but it is not exported.
+src/components/primitives/AppInput.tsx(18,6): error TS2339: Property 'className' does not exist on type 'AppInputProps'.
+src/components/three/DotGlobe.tsx(3,34): error TS2307: Cannot find module '@react-three/fiber' or its corresponding type declarations.
+src/components/three/DotGlobe.tsx(4,39): error TS2307: Cannot find module '@react-three/drei' or its corresponding type declarations.
+src/components/three/DotGlobe.tsx(14,15): error TS2554: Expected 1 arguments, but got 0.
+src/components/three/DotGlobe.tsx(28,13): error TS7006: Parameter '_' implicitly has an 'any' type.
+src/components/three/DotGlobe.tsx(28,16): error TS7006: Parameter 'delta' implicitly has an 'any' type.
+src/components/three/FloatingOrbs.tsx(3,34): error TS2307: Cannot find module '@react-three/fiber' or its corresponding type declarations.
+src/components/three/FloatingOrbs.tsx(4,45): error TS2307: Cannot find module '@react-three/drei' or its corresponding type declarations.
+src/components/three/FloatingOrbs.tsx(14,15): error TS2554: Expected 1 arguments, but got 0.
+src/components/three/FloatingOrbs.tsx(15,13): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/components/three/FloatingOrbs.tsx(42,7): error TS2339: Property 'ambientLight' does not exist on type 'JSX.IntrinsicElements'.
+src/components/three/FloatingOrbs.tsx(43,7): error TS2339: Property 'pointLight' does not exist on type 'JSX.IntrinsicElements'.
+src/modules/contacts/components/ContactDetail.tsx(63,50): error TS18047: 'contact.last_name' is possibly 'null'.

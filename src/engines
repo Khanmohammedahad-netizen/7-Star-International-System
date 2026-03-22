@@ -1,0 +1,85 @@
+'use client'
+import React from 'react'
+import Lottie from 'lottie-react'
+
+// Lottie animations live in /public/lottie/
+// Download free files from lottiefiles.com
+// Recommended files:
+//   empty-box.json     → empty tables/lists
+//   success-check.json → success confirmations
+//   no-data.json       → charts with no data
+//   not-found.json     → 404 page
+//   loading-dots.json  → subtle loading
+
+interface LottieEmptyStateProps {
+  animationData: object
+  message: string
+  description?: string
+  action?: React.ReactNode
+  size?: number
+}
+
+export function LottieEmptyState({
+  animationData,
+  message,
+  description,
+  action,
+  size = 180,
+}: LottieEmptyStateProps) {
+  return (
+    <div style={{
+      display:       'flex',
+      flexDirection: 'column',
+      alignItems:    'center',
+      justifyContent:'center',
+      padding:       '48px 24px',
+      textAlign:     'center',
+      gap:           '16px',
+    }}>
+      <Lottie
+        animationData={animationData}
+        loop={true}
+        style={{ width: size, height: size }}
+      />
+      <div>
+        <p style={{
+          fontSize:   '15px',
+          fontWeight: 500,
+          color:      'var(--text-primary)',
+          marginBottom: '6px',
+        }}>
+          {message}
+        </p>
+        {description && (
+          <p style={{
+            fontSize: '13px',
+            color:    'var(--text-muted)',
+            maxWidth: '320px',
+          }}>
+            {description}
+          </p>
+        )}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+export function LottieSuccess({
+  animationData,
+  onComplete,
+  size = 120,
+}: {
+  animationData: object
+  onComplete?: () => void
+  size?: number
+}) {
+  return (
+    <Lottie
+      animationData={animationData}
+      loop={false}
+      onComplete={onComplete}
+      style={{ width: size, height: size }}
+    />
+  )
+}
