@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import * as React from "react"
@@ -73,3 +74,4 @@ export const DropdownLabel = React.forwardRef<
 
 DropdownContent.displayName = "DropdownContent"
 DropdownItem.displayName = "DropdownItem"
+

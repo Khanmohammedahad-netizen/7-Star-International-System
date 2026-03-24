@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Providers } from '@/components/providers/Providers'
 
 export const metadata: Metadata = {
-  title: 'MVP Skeleton',
-  description: 'Enterprise SaaS Skeleton by MAK Software Solutions',
+  title: '7STAR OS',
+  description: 'Enterprise Event Operations System by MAK Software Solutions',
 }
 
 export default function RootLayout({
@@ -12,9 +13,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="antialiased bg-neutral-50 text-neutral-900">
-        {children}
+    <html lang="en" className="dark">
+      <body className="antialiased bg-black text-neutral-100 selection:bg-white/10">
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

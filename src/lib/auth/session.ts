@@ -1,28 +1,43 @@
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import type { SessionUser } from '@/types/auth'
 import type { Role } from '@/config/roles.config'
+import { isMockMode } from '@/lib/utils/env'
 
 export async function getSession(): Promise<SessionUser | null> {
-    const supabase = await createSupabaseServerClient()
-    const { data: { user }, error } = await supabase.auth.getUser()
+    if (isMockMode()) {
+        return {
+            id: 'mock-user-123',
+            email: 'operator@7star.com',
+            organizationId: 'mock-org-456',
+            role: 'coordinator' as Role
+        }
+    }
 
-    if (error || !user) return null
+    try {
+        const supabase = await createSupabaseServerClient()
+        const { data: { user }, error } = await supabase.auth.getUser()
 
-    // Fetch first active membership for the user
-    const { data: membership } = await supabase
-        .from('memberships')
-        .select('organization_id, role')
-        .eq('user_id', user.id)
-        .limit(1)
-        .single()
+        if (error || !user) return null
 
-    if (!membership) return null
+        // Fetch first active membership for the user
+        const { data: membership, error: memError } = await supabase
+            .from('memberships')
+            .select('organization_id, role')
+            .eq('user_id', user.id)
+            .limit(1)
+            .single()
 
-    return {
-        id: user.id,
-        email: user.email || '',
-        organizationId: membership.organization_id,
-        role: membership.role as Role,
+        if (memError || !membership) return null
+
+        return {
+            id: user.id,
+            email: user.email || '',
+            organizationId: membership.organization_id,
+            role: membership.role as Role,
+        }
+    } catch (err) {
+        console.error('Session Error:', err)
+        return null
     }
 }
 
