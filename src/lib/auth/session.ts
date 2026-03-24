@@ -32,7 +32,10 @@ export async function getSession(): Promise<SessionUser | null> {
             .limit(1)
             .single()
 
-        if (memError || !membership) return null
+        if (memError || !membership) {
+            console.warn('⚠️ User authenticated but no membership found in memberships table:', user.id)
+            return null
+        }
 
         return {
             id: user.id,
