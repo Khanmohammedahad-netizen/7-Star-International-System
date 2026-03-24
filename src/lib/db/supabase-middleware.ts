@@ -6,9 +6,18 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Safety check for production environment sanity
+  if (!url || !key) {
+    console.warn('⚠️ Supabase Middleware: Missing URL or Key. Skipping auth check.')
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    key,
     {
       cookies: {
         getAll() {
@@ -27,6 +36,7 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // This will refresh session if expired - mandatory for Server Components
   const {
     data: { user },
   } = await supabase.auth.getUser()
