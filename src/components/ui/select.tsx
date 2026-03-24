@@ -21,7 +21,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               className
             )}
             ref={ref}
-            ...props
+            {...props}
           >
             {options.map((opt) => (
               <option key={opt.value} value={opt.value} className="bg-[#0a0a0a] text-white">

@@ -57,7 +57,7 @@ export async function GET() {
       supabase.from('event_vendor_assignments').select('id', { count: 'exact', head: true }).eq('org_id', session.organizationId).eq('status', 'contacted')
     ])
 
-    const totalRevenue = revenueData?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
+    const totalRevenue = revenueData?.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0) || 0
 
     return NextResponse.json({
       success: true,
