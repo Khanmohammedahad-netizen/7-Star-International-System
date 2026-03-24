@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { GlobalCalendar } from '@/modules/calendar/components/GlobalCalendar'
 
 export default function CalendarPage() {

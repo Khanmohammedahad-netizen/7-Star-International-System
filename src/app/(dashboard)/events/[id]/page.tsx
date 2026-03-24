@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { EventCommandCenter } from '@/modules/events/components/EventCommandCenter'
 
 export default function EventPage({ params }: { params: { id: string } }) {

@@ -1,5 +1,6 @@
-// @ts-nocheck
 'use client'
+
+export const dynamic = 'force-dynamic'
 
 import { useEvents } from '@/modules/events/hooks/useEvents'
 import { Card } from '@/components/ui/card'
