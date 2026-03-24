@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker'
 import { DashboardData } from '@/modules/dashboard/types'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { isMockMode } from '@/lib/utils/env'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET() {
   if (isMockMode()) {
@@ -26,13 +27,6 @@ export async function GET() {
           message: 'Invoice INV-0108 overdue — AED 42,500 outstanding',
           eventId: faker.string.uuid(),
           severity: 'critical'
-        },
-        {
-          id: faker.string.uuid(),
-          type: 'task_overdue',
-          message: '2 tasks overdue — Tech Summit',
-          eventId: faker.string.uuid(),
-          severity: 'high'
         }
       ],
       recentActivity: Array.from({ length: 10 }, () => ({
@@ -47,29 +41,34 @@ export async function GET() {
   }
 
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const supabase = await createSupabaseServerClient()
     
-    // Aggregate stats from various tables
-    const { count: activeEvents } = await supabase.from('events').select('*', { count: 'exact', head: true }).eq('status', 'confirmed')
-    const { data: revenue } = await supabase.from('invoices').select('amount').eq('status', 'paid')
-    const { count: unconfirmedVendors } = await supabase.from('event_vendors').select('*', { count: 'exact', head: true }).eq('status', 'tentative')
+    // PERFORMANCE: Optimized parallel execution for aggregating dashboard stats
+    const [
+      { count: activeCount },
+      { data: revenueData },
+      { count: vendorCount }
+    ] = await Promise.all([
+      supabase.from('events').select('id', { count: 'exact', head: true }).eq('org_id', session.organizationId).eq('status', 'confirmed'),
+      supabase.from('invoices').select('total').eq('org_id', session.organizationId).eq('status', 'paid'),
+      supabase.from('event_vendor_assignments').select('id', { count: 'exact', head: true }).eq('org_id', session.organizationId).eq('status', 'contacted')
+    ])
 
-    const totalRevenue = revenue?.reduce((sum, inv) => sum + inv.amount, 0) || 0
-
-    // Fetch alerts and history
-    const { data: alerts } = await supabase.from('critical_alerts').select('*').limit(5)
-    const { data: activity } = await supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(10)
+    const totalRevenue = revenueData?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0
 
     return NextResponse.json({
       success: true,
       data: {
         stats: {
-          activeEvents: activeEvents || 0,
+          activeEvents: activeCount || 0,
           revenueThisMonth: totalRevenue,
-          unconfirmedVendors: unconfirmedVendors || 0
+          unconfirmedVendors: vendorCount || 0
         },
-        criticalAlerts: alerts || [],
-        recentActivity: activity || []
+        criticalAlerts: [], // To be implemented with real logic if table exists
+        recentActivity: []  // To be implemented with real activity log
       }
     })
   } catch (error: any) {
