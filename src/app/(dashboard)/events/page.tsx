@@ -50,7 +50,7 @@ export default function EventsListPage() {
           <Link key={event.id} href={`/events/${event.id}`}>
             <Card className="hover:border-primary/50 transition-colors p-5 h-full flex flex-col cursor-pointer border-t-4 shadow-sm hover:shadow" style={{ borderTopColor: event.color }}>
               <div className="flex justify-between items-start mb-4">
-                <Badge variant="secondary" className="uppercase tracking-wider text-[10px]" style={{ color: event.color, borderColor: event.color }}>
+                <Badge variant="default" className="uppercase tracking-wider text-[10px]" style={{ color: event.color, borderColor: event.color }}>
                   {event.status.replace('_', ' ')}
                 </Badge>
               </div>

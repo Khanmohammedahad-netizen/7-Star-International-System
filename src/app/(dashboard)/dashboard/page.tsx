@@ -1,3 +1,4 @@
+import { DashboardContent } from '@/modules/dashboard/components/DashboardContent'
 import { requireSession } from '@/lib/auth/session'
 
 export const dynamic = 'force-dynamic'
