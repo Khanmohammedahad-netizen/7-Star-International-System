@@ -18,6 +18,8 @@ export function useEvents(params?: UseEventsParams) {
       if (!res.ok) throw new Error('Failed to fetch events')
       const json = await res.json()
       return json.data
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30,    // 30 minutes
   })
 }

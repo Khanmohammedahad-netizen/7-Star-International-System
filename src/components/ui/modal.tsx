@@ -32,15 +32,15 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
             {/* Dialog */}
             <div
                 className={cn(
-                    'relative bg-white rounded-xl border border-neutral-200 shadow-xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95',
+                    'relative bg-[#0a0a0a] rounded-2xl border border-white/10 shadow-2xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95 backdrop-blur-md',
                     className
                 )}
             >
-                <div className="flex items-center justify-between p-6 border-b border-neutral-100">
-                    <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+                <div className="flex items-center justify-between p-6 border-b border-white/5">
+                    <h2 className="text-xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-cormorant)' }}>{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                        className="text-neutral-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M18 6 6 18" /><path d="m6 6 12 12" />

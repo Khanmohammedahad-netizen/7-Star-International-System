@@ -125,12 +125,12 @@ export function EventForm() {
                 <Textarea id="notes" {...register('notes')} placeholder="General setup requirements, special requests..." rows={4} className="border-white/10 bg-white/5" />
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => router.back()} className="h-11 px-8 border-white/10 hover:bg-white/5">
+            <div className="flex justify-end gap-4 pt-10 border-t border-white/5 mt-8">
+                <Button type="button" variant="ghost" onClick={() => router.back()} className="h-12 px-8 text-neutral-400 hover:text-white hover:bg-white/5 transition-all">
                     Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="h-11 px-10 bg-white text-black hover:bg-neutral-200 transition-colors">
-                    {isSubmitting ? 'Creating...' : 'Create Event Command Center'}
+                <Button type="submit" disabled={isSubmitting} className="h-12 px-12 bg-white text-black font-bold hover:bg-neutral-200 transition-all shadow-xl shadow-white/5 disabled:opacity-50">
+                    {isSubmitting ? 'Creating...' : 'Initialize Event Command Center'}
                 </Button>
             </div>
         </form>
