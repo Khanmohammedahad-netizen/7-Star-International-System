@@ -15,6 +15,11 @@ export async function getSession(): Promise<SessionUser | null> {
 
     try {
         const supabase = await createSupabaseServerClient()
+        if (!supabase || !supabase.auth) {
+            console.error('❌ Supabase client initialization failed: Missing URL or Key at runtime.')
+            return null
+        }
+        
         const { data: { user }, error } = await supabase.auth.getUser()
 
         if (error || !user) return null
