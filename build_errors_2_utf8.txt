@@ -1,0 +1,4 @@
+﻿vite.config.ts(1,30): error TS2307: Cannot find module 'vite' or its corresponding type declarations.
+vite.config.ts(2,19): error TS2307: Cannot find module '@vitejs/plugin-react-swc' or its corresponding type declarations.
+vite.config.ts(4,33): error TS2307: Cannot find module 'lovable-tagger' or its corresponding type declarations.
+vite.config.ts(6,32): error TS7031: Binding element 'mode' implicitly has an 'any' type.

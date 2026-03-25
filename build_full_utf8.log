@@ -1,0 +1,708 @@
+﻿
+> 7star-international-system@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.13
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+node.exe : Browserslist: 
+browsers data 
+(caniuse-lite) is 9 
+months old. Please run:
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (B  
+  rowserslist: b...ld.    
+ Please run::String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+  npx update-browserslist-
+db@latest
+  Why you should do it 
+regularly: https://github.
+com/browserslist/update-db
+#readme
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+ ΓÜá The Next.js plugin 
+was not detected in your 
+ESLint configuration. See 
+https://nextjs.org/docs/ba
+sic-features/eslint#migrat
+ing-existing-config
+
+Failed to compile.
+
+./src/app/(dashboard)/fina
+nce/page.tsx
+7:10  Error: 'CreditCard' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+
+./src/app/(dashboard)/layo
+ut.tsx
+11:3  Error: 'Settings' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+18:10  Error: 'Button' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+
+./src/app/api/clients/rout
+e.ts
+28:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+57:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+86:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+113:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/dashboard/ro
+ute.ts
+60:65  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+74:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/events/route
+.ts
+46:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+76:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+105:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+132:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/events/[id]/
+finance/route.ts
+54:68  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+58:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/events/[id]/
+route.ts
+25:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+50:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+71:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/events/[id]/
+timeline/route.ts
+24:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/finance/rout
+e.ts
+22:64  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+23:65  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+24:67  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+55:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/setup/route.
+ts
+61:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/api/vendors/rout
+e.ts
+28:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+57:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+86:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+113:19  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/app/auth/login/page.
+tsx
+9:10  Error: 'Input' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+16:9  Error: 'router' is 
+assigned a value but 
+never used.  @typescript-e
+slint/no-unused-vars
+34:21  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/components/app/AppBu
+tton.tsx
+12:6  Error: 'permission' 
+is defined but never 
+used. Allowed unused args 
+must match /^_/u.  @typesc
+ript-eslint/no-unused-vars
+
+./src/components/blocks/Co
+mmandPalette.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+5:29  Error: 
+'CommandIcon' is defined 
+but never used.  @typescri
+pt-eslint/no-unused-vars
+8:10  Error: 'cn' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+33:34  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+40:37  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/components/blocks/Da
+taTable.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+22:3  Error: 'Settings2' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+26:3  Error: 'Loader2' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+
+./src/components/blocks/Si
+debarNav.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+7:18  Error: 
+'AnimatePresence' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+8:24  Error: 
+'LayoutDashboard' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+
+./src/components/blocks/St
+atsCard.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+6:47  Error: 'LucideIcon' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+10:10  Error: 'cn' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+
+./src/components/layout/ap
+p-shell.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+26:46  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/components/mode-togg
+le.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/components/primitive
+s/AppButton.tsx
+23:6  Error: 'permission' 
+is defined but never 
+used. Allowed unused args 
+must match /^_/u.  @typesc
+ript-eslint/no-unused-vars
+
+./src/components/primitive
+s/Button.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/components/primitive
+s/Card.tsx
+27:21  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+35:23  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/components/primitive
+s/Dropdown.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+6:10  Error: 
+'ChevronRight' is defined 
+but never used.  @typescri
+pt-eslint/no-unused-vars
+7:18  Error: 
+'AnimatePresence' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+25:21  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+26:25  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/components/primitive
+s/Modal.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+7:18  Error: 
+'AnimatePresence' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+31:26  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+38:25  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+39:29  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/hooks/use-notificati
+ons.ts
+7:10  Error: 'getSession' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+
+./src/lib/api/response.ts
+3:29  Warning: Unexpected 
+any. Specify a different 
+type.  @typescript-eslint/
+no-explicit-any
+7:27  Warning: Unexpected 
+any. Specify a different 
+type.  @typescript-eslint/
+no-explicit-any
+10:81  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+24:44  Error: Don't use 
+`Function` as a type. The 
+`Function` type accepts 
+any function-like value.
+It provides no type 
+safety when calling the 
+function, which can be a 
+common source of bugs.
+It also accepts things 
+like class declarations, 
+which will throw at 
+runtime as they will not 
+be called with `new`.
+If you are expecting the 
+function to accept 
+certain arguments, you 
+should explicitly define 
+the function shape.  @type
+script-eslint/ban-types
+25:28  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+28:25  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/lib/db/supabase-brow
+ser.ts
+10:22  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/lib/db/supabase-serv
+er.ts
+11:24  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/lib/mock/events.ts
+11:58  Error: 'i' is 
+defined but never used. 
+Allowed unused args must 
+match /^_/u.  @typescript-
+eslint/no-unused-vars
+
+./src/lib/mock/timeline.ts
+4:7  Error: 
+'TIMELINE_CATEGORIES' is 
+assigned a value but 
+never used.  @typescript-e
+slint/no-unused-vars
+
+./src/lib/utils/audit-logg
+er.ts
+8:31  Warning: Unexpected 
+any. Specify a different 
+type.  @typescript-eslint/
+no-explicit-any
+
+./src/modules/calendar/com
+ponents/GlobalCalendar.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/calendar/hoo
+ks/useCalendar.ts
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/clients/comp
+onents/ClientForm.tsx
+48:22  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/modules/clients/comp
+onents/ClientList.tsx
+5:24  Error: 'Phone' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+
+./src/modules/dashboard/co
+mponents/CriticalAlerts.ts
+x
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+3:29  Error: 'CardHeader' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+3:41  Error: 'CardTitle' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+5:38  Error: 
+'CalendarDots' is defined 
+but never used.  @typescri
+pt-eslint/no-unused-vars
+
+./src/modules/dashboard/co
+mponents/RecentActivity.ts
+x
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/dashboard/co
+mponents/TodayEvents.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+5:10  Error: 
+'CalendarIcon' is defined 
+but never used.  @typescri
+pt-eslint/no-unused-vars
+
+./src/modules/dashboard/co
+mponents/UpcomingEvents.ts
+x
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/events/compo
+nents/EventCommandCenter.t
+sx
+7:16  Error: 
+'CardContent' is defined 
+but never used.  @typescri
+pt-eslint/no-unused-vars
+
+./src/modules/events/compo
+nents/EventForm.tsx
+42:14  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+70:50  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/modules/events/compo
+nents/EventHeader.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/events/compo
+nents/EventOverviewTab.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/events/hooks
+/useEventMutations.ts
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/finance/comp
+onents/EventFinanceTab.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+80:38  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/modules/finance/comp
+onents/FinanceDashboard.ts
+x
+8:5  Error: 'DollarSign' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+17:5  Error: 'BarChart' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+18:5  Error: 'Bar' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+19:5  Error: 'XAxis' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+20:5  Error: 'YAxis' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+21:5  Error: 
+'CartesianGrid' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+22:5  Error: 'Tooltip' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+23:5  Error: 
+'ResponsiveContainer' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+24:5  Error: 'AreaChart' 
+is defined but never 
+used.  @typescript-eslint/
+no-unused-vars
+25:5  Error: 'Area' is 
+defined but never used.  @
+typescript-eslint/no-unuse
+d-vars
+118:73  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+148:69  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+./src/modules/timeline/com
+ponents/EventTimeline.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/vendors/comp
+onents/EventVendorList.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+7:35  Error: 'eventId' is 
+defined but never used. 
+Allowed unused args must 
+match /^_/u.  @typescript-
+eslint/no-unused-vars
+
+./src/modules/vendors/comp
+onents/VendorDirectory.tsx
+1:1  Error: Do not use 
+"@ts-nocheck" because it 
+alters compilation 
+errors.  @typescript-eslin
+t/ban-ts-comment
+
+./src/modules/vendors/comp
+onents/VendorForm.tsx
+26:14  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+30:34  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+49:29  Warning: 
+Unexpected any. Specify a 
+different type.  @typescri
+pt-eslint/no-explicit-any
+
+info  - Need to disable 
+some ESLint rules? Learn 
+more here: https://nextjs.
+org/docs/basic-features/es
+lint#disabling-rules

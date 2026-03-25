@@ -11,15 +11,19 @@ import { Label } from "@/components/ui/label"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
+import { z } from "zod"
+
+type VendorFormData = z.infer<typeof createVendorSchema>
+
 export function VendorForm({ onSuccess }: { onSuccess: () => void }) {
     const queryClient = useQueryClient()
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<VendorFormData>({
         resolver: zodResolver(createVendorSchema),
         defaultValues: {
             category: 'catering',
             is_preferred: false
-        }
+        } as any
     })
 
     const mutation = useMutation({

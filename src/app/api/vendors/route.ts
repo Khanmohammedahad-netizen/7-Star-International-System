@@ -1,29 +1,29 @@
 import { NextResponse } from 'next/server'
-import { mockVendors } from '@/lib/mock/vendors'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
-import { isMockMode } from '@/lib/utils/env'
 import { getSession } from '@/lib/auth/session'
 
-const VENDOR_COLUMNS = 'id, name, category, contact_name, phone, email, rating, is_preferred, is_active'
+const VENDOR_COLUMNS = 'id, name, service_type, contact, cost_basis, created_at'
 
-export async function GET() {
-  if (isMockMode()) {
-    return NextResponse.json({ success: true, data: mockVendors })
-  }
-
+export async function GET(req: Request) {
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { searchParams } = new URL(req.url)
+    const limit = parseInt(searchParams.get('limit') || '100', 10)
+
     const supabase = await createSupabaseServerClient()
-    
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
     const { data, error } = await supabase
-      .from('event_vendors_directory')
+      .from('vendors')
       .select(VENDOR_COLUMNS)
       .eq('org_id', session.organizationId)
       .order('name', { ascending: true })
+      .limit(limit)
 
     if (error) throw error
+
     return NextResponse.json({ success: true, data })
   } catch (error: any) {
     console.error('API Error: GET /api/vendors', error)
@@ -33,30 +33,21 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-
-    if (isMockMode()) {
-      return NextResponse.json({ 
-        success: true, 
-        data: { 
-          id: `mock-${Date.now()}`,
-          ...body,
-          created_at: new Date().toISOString()
-        } 
-      })
-    }
-
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const body = await req.json()
     const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const vendorData = {
+      ...body,
+      org_id: session.organizationId
+    }
 
     const { data, error } = await supabase
-      .from('event_vendors_directory')
-      .insert({
-        ...body,
-        org_id: session.organizationId
-      })
+      .from('vendors')
+      .insert(vendorData)
       .select(VENDOR_COLUMNS)
       .single()
 
@@ -65,6 +56,62 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, data })
   } catch (error: any) {
     console.error('API Error: POST /api/vendors', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json()
+    const { id, ...updateData } = body
+    if (!id) return NextResponse.json({ error: 'Vendor ID required' }, { status: 400 })
+
+    const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const { data, error } = await supabase
+      .from('vendors')
+      .update(updateData)
+      .eq('id', id)
+      .eq('org_id', session.organizationId)
+      .select(VENDOR_COLUMNS)
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, data })
+  } catch (error: any) {
+    console.error('API Error: PUT /api/vendors', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'Vendor ID required' }, { status: 400 })
+
+    const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const { error } = await supabase
+      .from('vendors')
+      .delete()
+      .eq('id', id)
+      .eq('org_id', session.organizationId)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('API Error: DELETE /api/vendors', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

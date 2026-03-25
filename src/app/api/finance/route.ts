@@ -3,60 +3,40 @@ import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
 export async function GET() {
-  const { isMockMode } = await import('@/lib/utils/env')
-  
-  if (isMockMode()) {
-    return NextResponse.json({
-      success: true,
-      data: {
-        summary: {
-          total_revenue: 1250000,
-          pending_payments: 450000,
-          total_expenses: 320000,
-          net_profit: 930000
-        },
-        recent_invoices: [],
-        recent_estimates: [],
-        recent_expenses: []
-      }
-    })
-  }
-
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
-    // Aggregate data for the Finance Dashboard
-    // 1. Fetch Invoices Summary
-    const { data: invoices, error: invError } = await supabase
-      .from('invoices')
-      .select('id, total, status, amount_paid, created_at')
-      .limit(100)
+    // 1. Fetch Finance Summary (Aggregated metrics per Org)
+    const { data: summaryData, error: sumError } = await supabase
+      .from('finances')
+      .select('budget, actual_cost, revenue, revenue_collected')
+      .eq('org_id', session.organizationId)
 
-    if (invError) throw invError
+    if (sumError) throw sumError
 
-    // 2. Fetch Estimates/Quotations Summary
-    const { data: estimates, error: estError } = await supabase
-      .from('estimates')
-      .select('id, total, status, created_at')
-      .limit(100)
+    // 2. Calculate Dashboard Totals with explicit types to fix lint errors
+    const total_revenue = summaryData?.reduce((acc: number, f: any) => acc + (Number(f.revenue) || 0), 0) || 0
+    const total_expenses = summaryData?.reduce((acc: number, f: any) => acc + (Number(f.actual_cost) || 0), 0) || 0
+    const pending_payments = summaryData?.reduce((acc: number, f: any) => acc + (Math.max(0, (Number(f.revenue) || 0) - (Number(f.revenue_collected) || 0))), 0) || 0
+    
+    // 3. Fetch Recent Financial Activities (Events with Finance data)
+    const { data: recentEvents, error: eventError } = await supabase
+      .from('events')
+      .select(`
+        id,
+        name,
+        status,
+        start_date,
+        finance:finances(budget, actual_cost, revenue)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10)
 
-    if (estError) throw estError
-
-    // 3. Fetch Expenses
-    const { data: expenses, error: expError } = await supabase
-      .from('event_expenses')
-      .select('id, amount, status, category')
-      .limit(100)
-
-    if (expError) throw expError
-
-    // Calculate metrics
-    const total_revenue = invoices?.reduce((acc, inv) => acc + (inv.total || 0), 0) || 0
-    const pending_payments = invoices?.filter(i => i.status !== 'paid').reduce((acc, inv) => acc + ((inv.total || 0) - (inv.amount_paid || 0)), 0) || 0
-    const total_expenses = expenses?.reduce((acc, exp) => acc + (exp.amount || 0), 0) || 0
+    if (eventError) throw eventError
 
     return NextResponse.json({
       success: true,
@@ -67,9 +47,9 @@ export async function GET() {
           total_expenses,
           net_profit: total_revenue - total_expenses
         },
-        recent_invoices: invoices?.slice(0, 10) || [],
-        recent_estimates: estimates?.slice(0, 10) || [],
-        recent_expenses: expenses?.slice(0, 10) || []
+        recent_invoices: [], 
+        recent_expenses: [], 
+        events_with_finance: recentEvents
       }
     })
   } catch (error: any) {

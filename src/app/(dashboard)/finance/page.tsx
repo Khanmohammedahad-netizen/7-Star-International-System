@@ -4,7 +4,7 @@
  */
 
 import { FinanceDashboard } from "@/modules/finance/components/FinanceDashboard"
-import { CreditCard, Download, Filter } from "lucide-react"
+import { Download, Filter } from "lucide-react"
 
 export default function FinancePage() {
   return (

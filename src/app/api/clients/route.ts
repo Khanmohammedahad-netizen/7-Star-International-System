@@ -2,42 +2,116 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
-export async function GET() {
+const CLIENT_COLUMNS = 'id, name, email, phone, company, created_at'
+
+export async function GET(req: Request) {
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { searchParams } = new URL(req.url)
+    const limit = parseInt(searchParams.get('limit') || '100', 10)
+
     const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
-    // MOCK MODE: Return mock data if database is not reachable
-    if (process.env.NEXT_PUBLIC_USE_MOCK === 'true' || process.env.VITE_USE_MOCK === 'true') {
-        const mockClients = [
-            { id: '1', name: 'Alpha Corp' },
-            { id: '2', name: 'Beta Systems' },
-            { id: '3', name: 'Gamma Solutions' }
-        ]
-        return NextResponse.json({ success: true, data: mockClients })
-    }
-
-    if (!supabase) throw new Error('Supabase client not initialized')
-
-    // PERFORMANCE: Fetch only name and ID for dropdowns
     const { data, error } = await supabase
-      .from('contacts')
-      .select('id, first_name, last_name')
+      .from('clients')
+      .select(CLIENT_COLUMNS)
       .eq('org_id', session.organizationId)
-      .order('first_name', { ascending: true })
+      .order('name', { ascending: true })
+      .limit(limit)
 
     if (error) throw error
 
-    const clients = (data || []).map((c: any) => ({
-      id: c.id,
-      name: `${c.first_name} ${c.last_name || ''}`.trim()
-    }))
-
-    return NextResponse.json({ success: true, data: clients })
+    return NextResponse.json({ success: true, data })
   } catch (error: any) {
     console.error('API Error: GET /api/clients', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json()
+    const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const clientData = {
+      ...body,
+      org_id: session.organizationId
+    }
+
+    const { data, error } = await supabase
+      .from('clients')
+      .insert(clientData)
+      .select(CLIENT_COLUMNS)
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, data })
+  } catch (error: any) {
+    console.error('API Error: POST /api/clients', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json()
+    const { id, ...updateData } = body
+    if (!id) return NextResponse.json({ error: 'Client ID required' }, { status: 400 })
+
+    const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updateData)
+      .eq('id', id)
+      .eq('org_id', session.organizationId)
+      .select(CLIENT_COLUMNS)
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true, data })
+  } catch (error: any) {
+    console.error('API Error: PUT /api/clients', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'Client ID required' }, { status: 400 })
+
+    const supabase = await createSupabaseServerClient()
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id)
+      .eq('org_id', session.organizationId)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('API Error: DELETE /api/clients', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

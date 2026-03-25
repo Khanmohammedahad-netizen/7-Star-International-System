@@ -8,14 +8,12 @@ import {
   Calendar, 
   Users, 
   CreditCard, 
-  Settings, 
   LogOut,
   Menu,
   X,
   Bell,
   Search
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
@@ -102,8 +100,14 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#050505]">
-          {children}
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#050505] relative">
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-50">
+            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/[0.02] rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-white/[0.01] rounded-full blur-[140px] animate-pulse" style={{ animationDelay: '2s' }} />
+          </div>
+          <div className="relative z-10">
+            {children}
+          </div>
         </div>
       </main>
     </div>

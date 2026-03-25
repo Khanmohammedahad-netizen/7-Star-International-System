@@ -1,0 +1,30 @@
+﻿src/app/(dashboard)/events/page.tsx(11,26): error TS7016: Could not find a declaration file for module 'luxon'. 'C:/Users/ahad/Downloads/7-Star-International-System-main/7-Star-International-System-main/node_modules/luxon/build/es6/luxon.mjs' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/luxon` if it exists or add a new declaration (.d.ts) file containing `declare module 'luxon';`
+src/app/api/events/[id]/finance/route.ts(54,50): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+src/app/api/events/[id]/finance/route.ts(54,55): error TS7006: Parameter 'exp' implicitly has an 'any' type.
+src/modules/events/components/EventForm.tsx(56,51): error TS2345: Argument of type '"name"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/events/components/EventForm.tsx(57,29): error TS2339: Property 'name' does not exist on type 'FieldErrors<{ status: string; type: string; venue_city: string; venue_country: string; color: string; }>'.
+src/modules/events/components/EventForm.tsx(57,81): error TS2339: Property 'name' does not exist on type 'FieldErrors<{ status: string; type: string; venue_city: string; venue_country: string; color: string; }>'.
+src/modules/events/components/EventForm.tsx(63,38): error TS2345: Argument of type '"client_id"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/events/components/EventForm.tsx(102,69): error TS2345: Argument of type '"start_date"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/events/components/EventForm.tsx(103,29): error TS2339: Property 'start_date' does not exist on type 'FieldErrors<{ status: string; type: string; venue_city: string; venue_country: string; color: string; }>'.
+src/modules/events/components/EventForm.tsx(103,87): error TS2339: Property 'start_date' does not exist on type 'FieldErrors<{ status: string; type: string; venue_city: string; venue_country: string; color: string; }>'.
+src/modules/events/components/EventForm.tsx(108,67): error TS2345: Argument of type '"end_date"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/events/components/EventForm.tsx(109,29): error TS2339: Property 'end_date' does not exist on type 'FieldErrors<{ status: string; type: string; venue_city: string; venue_country: string; color: string; }>'.
+src/modules/events/components/EventForm.tsx(109,85): error TS2339: Property 'end_date' does not exist on type 'FieldErrors<{ status: string; type: string; venue_city: string; venue_country: string; color: string; }>'.
+src/modules/events/components/EventForm.tsx(114,57): error TS2345: Argument of type '"venue_name"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/events/components/EventForm.tsx(119,73): error TS2345: Argument of type '"budget_total"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/events/components/EventForm.tsx(125,51): error TS2345: Argument of type '"notes"' is not assignable to parameter of type '"status" | "type" | "color" | "venue_city" | "venue_country"'.
+src/modules/finance/components/FinanceDashboard.tsx(104,32): error TS2322: Type '"outline"' is not assignable to type '"default" | "success" | "warning" | "danger" | "info" | undefined'.
+src/modules/finance/components/FinanceDashboard.tsx(123,52): error TS2322: Type '"success" | "secondary"' is not assignable to type '"default" | "success" | "warning" | "danger" | "info" | undefined'.
+  Type '"secondary"' is not assignable to type '"default" | "success" | "warning" | "danger" | "info" | undefined'.
+src/modules/vendors/components/VendorForm.tsx(51,54): error TS2345: Argument of type '"name"' is not assignable to parameter of type '"category" | "is_preferred"'.
+src/modules/vendors/components/VendorForm.tsx(52,25): error TS2339: Property 'name' does not exist on type 'FieldErrors<{ category: string; is_preferred: boolean; }>'.
+src/modules/vendors/components/VendorForm.tsx(52,77): error TS2339: Property 'name' does not exist on type 'FieldErrors<{ category: string; is_preferred: boolean; }>'.
+src/modules/vendors/components/VendorForm.tsx(74,59): error TS2345: Argument of type '"contact_name"' is not assignable to parameter of type '"category" | "is_preferred"'.
+src/modules/vendors/components/VendorForm.tsx(78,52): error TS2345: Argument of type '"phone"' is not assignable to parameter of type '"category" | "is_preferred"'.
+src/modules/vendors/components/VendorForm.tsx(84,61): error TS2345: Argument of type '"email"' is not assignable to parameter of type '"category" | "is_preferred"'.
+vite.config.ts(1,30): error TS2307: Cannot find module 'vite' or its corresponding type declarations.
+vite.config.ts(2,19): error TS2307: Cannot find module '@vitejs/plugin-react-swc' or its corresponding type declarations.
+vite.config.ts(4,33): error TS2307: Cannot find module 'lovable-tagger' or its corresponding type declarations.
+vite.config.ts(6,32): error TS7031: Binding element 'mode' implicitly has an 'any' type.

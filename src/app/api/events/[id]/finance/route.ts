@@ -51,7 +51,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
         total_received: summary?.total_received || 0,
         total_outstanding: summary?.total_outstanding || 0,
         total_estimated_expenses: summary?.total_estimated_expenses || 0,
-        total_actual_expenses: expenses?.reduce((acc, exp) => acc + exp.amount, 0) || 0,
+        total_actual_expenses: expenses?.reduce((acc: number, exp: any) => acc + exp.amount, 0) || 0,
         expenses: expenses || []
       }
     })

@@ -14,6 +14,10 @@ import { useEventMutations } from "../hooks/useEventMutations"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
+import { z } from "zod"
+
+type EventFormData = z.infer<typeof createEventSchema>
+
 export function EventForm() {
     const router = useRouter()
     const { createEvent } = useEventMutations()
@@ -27,7 +31,7 @@ export function EventForm() {
         }
     })
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<EventFormData>({
         resolver: zodResolver(createEventSchema),
         defaultValues: {
             status: 'planning',
@@ -35,10 +39,10 @@ export function EventForm() {
             venue_city: 'Dubai',
             venue_country: 'UAE',
             color: '#C9A84C'
-        }
+        } as any
     })
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: EventFormData) => {
         try {
             await createEvent(data)
             toast.success("Event created successfully")
