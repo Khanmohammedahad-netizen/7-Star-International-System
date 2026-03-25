@@ -33,10 +33,22 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json()
+
+    if (isMockMode()) {
+      return NextResponse.json({ 
+        success: true, 
+        data: { 
+          id: `mock-${Date.now()}`,
+          ...body,
+          created_at: new Date().toISOString()
+        } 
+      })
+    }
+
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await req.json()
     const supabase = await createSupabaseServerClient()
 
     const { data, error } = await supabase

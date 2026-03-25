@@ -3,6 +3,25 @@ import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
 export async function GET() {
+  const { isMockMode } = await import('@/lib/utils/env')
+  
+  if (isMockMode()) {
+    return NextResponse.json({
+      success: true,
+      data: {
+        summary: {
+          total_revenue: 1250000,
+          pending_payments: 450000,
+          total_expenses: 320000,
+          net_profit: 930000
+        },
+        recent_invoices: [],
+        recent_estimates: [],
+        recent_expenses: []
+      }
+    })
+  }
+
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
