@@ -10,33 +10,55 @@ export async function GET() {
     const supabase = await createSupabaseServerClient()
     if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
-    // 1. Fetch Finance Summary (Aggregated metrics per Org)
-    const { data: summaryData, error: sumError } = await supabase
-      .from('finances')
-      .select('budget, actual_cost, revenue, revenue_collected')
-      .eq('org_id', session.organizationId)
+    // Parallel queries for all finance data
+    const [
+      invoicePaidResult,
+      invoicePendingResult,
+      expensesResult,
+      recentInvoicesResult,
+      recentExpensesResult,
+    ] = await Promise.all([
+      // Total revenue = SUM of paid invoices
+      supabase
+        .from('invoices')
+        .select('total')
+        .eq('org_id', session.organizationId)
+        .eq('status', 'paid'),
 
-    if (sumError) throw sumError
+      // Pending payments = SUM of pending/overdue invoices
+      supabase
+        .from('invoices')
+        .select('total')
+        .eq('org_id', session.organizationId)
+        .in('status', ['pending', 'overdue']),
 
-    // 2. Calculate Dashboard Totals with explicit types to fix lint errors
-    const total_revenue = summaryData?.reduce((acc: number, f: any) => acc + (Number(f.revenue) || 0), 0) || 0
-    const total_expenses = summaryData?.reduce((acc: number, f: any) => acc + (Number(f.actual_cost) || 0), 0) || 0
-    const pending_payments = summaryData?.reduce((acc: number, f: any) => acc + (Math.max(0, (Number(f.revenue) || 0) - (Number(f.revenue_collected) || 0))), 0) || 0
-    
-    // 3. Fetch Recent Financial Activities (Events with Finance data)
-    const { data: recentEvents, error: eventError } = await supabase
-      .from('events')
-      .select(`
-        id,
-        name,
-        status,
-        start_date,
-        finance:finances(budget, actual_cost, revenue)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(10)
+      // Total expenses = SUM of all expenses
+      supabase
+        .from('expenses')
+        .select('amount')
+        .eq('org_id', session.organizationId),
 
-    if (eventError) throw eventError
+      // Recent invoices (last 10)
+      supabase
+        .from('invoices')
+        .select('id, doc_number, doc_type, client_name, total, status, issue_date, created_at')
+        .eq('org_id', session.organizationId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+
+      // Recent expenses (last 10)
+      supabase
+        .from('expenses')
+        .select('id, description, category, amount, expense_date, event_id, created_at')
+        .eq('org_id', session.organizationId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+    ])
+
+    const total_revenue = (invoicePaidResult.data || []).reduce((s: number, r: any) => s + (Number(r.total) || 0), 0)
+    const pending_payments = (invoicePendingResult.data || []).reduce((s: number, r: any) => s + (Number(r.total) || 0), 0)
+    const total_expenses = (expensesResult.data || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0)
+    const net_profit = total_revenue - total_expenses
 
     return NextResponse.json({
       success: true,
@@ -45,11 +67,10 @@ export async function GET() {
           total_revenue,
           pending_payments,
           total_expenses,
-          net_profit: total_revenue - total_expenses
+          net_profit,
         },
-        recent_invoices: [], 
-        recent_expenses: [], 
-        events_with_finance: recentEvents
+        recent_invoices: recentInvoicesResult.data || [],
+        recent_expenses: recentExpensesResult.data || [],
       }
     })
   } catch (error: any) {

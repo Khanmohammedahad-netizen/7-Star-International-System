@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
-const CLIENT_COLUMNS = 'id, name, email, phone, company, created_at'
+const CLIENT_COLUMNS = 'id, name, email, phone, company, country, notes, created_at'
 
 export async function GET(req: Request) {
   try {
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: data || [] })
   } catch (error: any) {
     console.error('API Error: GET /api/clients', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
@@ -41,7 +41,12 @@ export async function POST(req: Request) {
     if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
     const clientData = {
-      ...body,
+      name: body.name,
+      email: body.email || null,
+      phone: body.phone || null,
+      company: body.company || null,
+      country: body.country || 'UAE',
+      notes: body.notes || null,
       org_id: session.organizationId
     }
 
@@ -51,7 +56,18 @@ export async function POST(req: Request) {
       .select(CLIENT_COLUMNS)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('DATABASE ERROR: POST /api/clients', error)
+      return NextResponse.json({ success: false, error: error.message, details: error }, { status: 500 })
+    }
+
+    // Log activity
+    await supabase.from('activity_log').insert({
+      org_id: session.organizationId,
+      type: 'client_added',
+      title: `New client added`,
+      description: `${data.name}${data.company ? ` (${data.company})` : ''} was added to the directory`
+    })
 
     return NextResponse.json({ success: true, data })
   } catch (error: any) {

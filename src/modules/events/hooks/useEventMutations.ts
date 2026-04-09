@@ -12,8 +12,11 @@ export function useEventMutations() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEvent)
       })
-      if (!res.ok) throw new Error('Failed to create event')
       const json = await res.json()
+      // Raise error with the actual Supabase error message for informative toasts
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to create event')
+      }
       return json.data
     },
     onSuccess: () => {
@@ -24,13 +27,15 @@ export function useEventMutations() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string, updates: Partial<Event> }) => {
-      const res = await fetch(`/api/events/${id}`, {
-        method: 'PATCH',
+      const res = await fetch('/api/events', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
+        body: JSON.stringify({ id, ...updates })
       })
-      if (!res.ok) throw new Error('Failed to update event')
       const json = await res.json()
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to update event')
+      }
       return json.data
     },
     onSuccess: (data, variables) => {
@@ -39,6 +44,26 @@ export function useEventMutations() {
     }
   })
 
-  return { createEvent: createMutation.mutateAsync, updateEvent: updateMutation.mutateAsync }
-}
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/events?id=${id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to delete event')
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    }
+  })
 
+  return {
+    createEvent: createMutation.mutateAsync,
+    updateEvent: updateMutation.mutateAsync,
+    deleteEvent: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  }
+}

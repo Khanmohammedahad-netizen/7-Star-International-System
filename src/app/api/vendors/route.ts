@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
-const VENDOR_COLUMNS = 'id, name, service_type, contact, cost_basis, created_at'
+const VENDOR_COLUMNS = 'id, name, category, service_type, contact, email, phone, rating, notes, cost_basis, created_at'
 
 export async function GET(req: Request) {
   try {
@@ -24,7 +24,13 @@ export async function GET(req: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, data })
+    // Normalize: prefer category over legacy service_type
+    const normalized = (data || []).map((v: any) => ({
+      ...v,
+      category: v.category || v.service_type || 'other',
+    }))
+
+    return NextResponse.json({ success: true, data: normalized })
   } catch (error: any) {
     console.error('API Error: GET /api/vendors', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
@@ -41,7 +47,15 @@ export async function POST(req: Request) {
     if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
     const vendorData = {
-      ...body,
+      name: body.name,
+      category: body.category || 'other',
+      service_type: body.category || body.service_type || 'other', // Keep legacy column in sync
+      contact: body.contact || null,
+      email: body.email || null,
+      phone: body.phone || null,
+      rating: typeof body.rating === 'number' ? body.rating : 0,
+      notes: body.notes || null,
+      cost_basis: body.cost_basis ? parseFloat(body.cost_basis) : 0,
       org_id: session.organizationId
     }
 
@@ -51,7 +65,18 @@ export async function POST(req: Request) {
       .select(VENDOR_COLUMNS)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('DATABASE ERROR: POST /api/vendors', error)
+      return NextResponse.json({ success: false, error: error.message, details: error }, { status: 500 })
+    }
+
+    // Log activity
+    await supabase.from('activity_log').insert({
+      org_id: session.organizationId,
+      type: 'vendor_added',
+      title: `New vendor added`,
+      description: `${data.name} (${data.category}) was added to the vendor directory`
+    })
 
     return NextResponse.json({ success: true, data })
   } catch (error: any) {

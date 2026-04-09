@@ -1,74 +1,80 @@
 import { NextResponse } from 'next/server'
-import { faker } from '@faker-js/faker'
-import { DashboardData } from '@/modules/dashboard/types'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
-import { isMockMode } from '@/lib/utils/env'
 import { getSession } from '@/lib/auth/session'
 
 export async function GET() {
-  if (isMockMode()) {
-    const mockData: DashboardData = {
-      stats: {
-        activeEvents: faker.number.int({ min: 5, max: 15 }),
-        revenueThisMonth: faker.number.int({ min: 100000, max: 800000 }),
-        unconfirmedVendors: faker.number.int({ min: 0, max: 8 })
-      },
-      criticalAlerts: [
-        {
-          id: faker.string.uuid(),
-          type: 'vendor_unconfirmed',
-          message: '3 vendors unconfirmed — Al Noor Gala (3 days away)',
-          eventId: faker.string.uuid(),
-          severity: 'critical'
-        },
-        {
-          id: faker.string.uuid(),
-          type: 'invoice_overdue',
-          message: 'Invoice INV-0108 overdue — AED 42,500 outstanding',
-          eventId: faker.string.uuid(),
-          severity: 'critical'
-        }
-      ],
-      recentActivity: Array.from({ length: 10 }, () => ({
-        id: faker.string.uuid(),
-        userName: faker.person.firstName(),
-        action: faker.helpers.arrayElement(['confirmed vendor', 'sent invoice', 'changed event date', 'updated timeline']),
-        eventName: faker.company.name() + ' Event',
-        timestamp: faker.date.recent().toISOString()
-      }))
-    }
-    return NextResponse.json({ success: true, data: mockData })
-  }
-
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const supabase = await createSupabaseServerClient()
-    
-    // PERFORMANCE: Optimized parallel execution for aggregating dashboard stats
+    if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
+
+    const today = new Date().toISOString().split('T')[0]
+
     const [
-      { count: activeCount },
-      { data: revenueData },
-      { count: vendorCount }
+      activeEventsResult,
+      paidInvoicesResult,
+      upcomingEventsResult,
+      recentActivityResult,
     ] = await Promise.all([
-      supabase.from('events').select('id', { count: 'exact', head: true }).eq('org_id', session.organizationId).eq('status', 'confirmed'),
-      supabase.from('invoices').select('total').eq('org_id', session.organizationId).eq('status', 'paid'),
-      supabase.from('event_vendor_assignments').select('id', { count: 'exact', head: true }).eq('org_id', session.organizationId).eq('status', 'contacted')
+      // Count confirmed/in_progress events
+      supabase
+        .from('events')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', session.organizationId)
+        .in('status', ['confirmed', 'in_progress', 'planning']),
+
+      // Revenue from paid invoices
+      supabase
+        .from('invoices')
+        .select('total')
+        .eq('org_id', session.organizationId)
+        .eq('status', 'paid'),
+
+      // Upcoming events (next 5 from today)
+      supabase
+        .from('events')
+        .select('id, title, event_date, end_date, location, status, venue_name, color')
+        .eq('org_id', session.organizationId)
+        .gte('event_date', today)
+        .order('event_date', { ascending: true })
+        .limit(5),
+
+      // Recent activity log
+      supabase
+        .from('activity_log')
+        .select('id, type, title, description, created_at')
+        .eq('org_id', session.organizationId)
+        .order('created_at', { ascending: false })
+        .limit(10),
     ])
 
-    const totalRevenue = revenueData?.reduce((sum: number, inv: any) => sum + (inv.total || 0), 0) || 0
+    const totalRevenue = (paidInvoicesResult.data || []).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0)
+
+    const upcomingEvents = (upcomingEventsResult.data || []).map((e: any) => ({
+      ...e,
+      name: e.title,
+      start_date: e.event_date,
+    }))
 
     return NextResponse.json({
       success: true,
       data: {
         stats: {
-          activeEvents: activeCount || 0,
+          activeEvents: activeEventsResult.count || 0,
           revenueThisMonth: totalRevenue,
-          unconfirmedVendors: vendorCount || 0
+          unconfirmedVendors: 0,
         },
-        criticalAlerts: [], // To be implemented with real logic if table exists
-        recentActivity: []  // To be implemented with real activity log
+        upcomingEvents,
+        recentActivity: (recentActivityResult.data || []).map((log: any) => ({
+          id: log.id,
+          type: log.type,
+          title: log.title,
+          description: log.description,
+          timestamp: log.created_at,
+        })),
+        criticalAlerts: [],
       }
     })
   } catch (error: any) {

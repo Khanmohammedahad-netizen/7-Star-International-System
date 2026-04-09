@@ -6,6 +6,8 @@ import { Search, Mail, Phone, Building2, MoreVertical, ExternalLink, Users } fro
 import { Client } from "../types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { motion, AnimatePresence } from "framer-motion"
 
 export function ClientList() {
     const [search, setSearch] = useState("")
@@ -29,7 +31,15 @@ export function ClientList() {
         return (
             <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                    <div key={i} className="bg-white/5 border border-white/10 p-5 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-5">
+                            <Skeleton className="w-12 h-12 rounded-xl bg-white/5" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-5 w-32 bg-white/5" />
+                                <Skeleton className="h-4 w-48 bg-white/5" />
+                            </div>
+                        </div>
+                    </div>
                 ))}
             </div>
         )
@@ -49,40 +59,49 @@ export function ClientList() {
 
             <div className="grid grid-cols-1 gap-4">
                 {filteredClients?.length === 0 ? (
-                    <div className="text-center py-20 bg-white/5 border border-dashed border-white/10 rounded-3xl">
-                        <Users className="w-12 h-12 text-neutral-700 mx-auto mb-4" />
-                        <h3 className="text-xl font-medium text-white">No clients found</h3>
-                        <p className="text-neutral-500 mt-1">Try a different search term or add your first client.</p>
-                    </div>
+                    <EmptyState 
+                        icon={Users}
+                        title="No Clients Found"
+                        description="Your client directory is currently empty. Add your first client to start managing partnerships."
+                    />
                 ) : (
-                    filteredClients?.map((client) => (
-                        <div key={client.id} className="group bg-white/5 border border-white/10 p-5 rounded-2xl hover:bg-white/[0.07] transition-all flex items-center justify-between">
-                            <div className="flex items-center gap-5">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10 text-xl font-bold text-white shadow-lg">
-                                    {client.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-white text-lg tracking-tight">{client.name}</h4>
-                                    <div className="flex items-center gap-4 mt-1 text-sm text-neutral-400">
-                                        {client.company && (
-                                            <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> {client.company}</span>
-                                        )}
-                                        {client.email && (
-                                            <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {client.email}</span>
-                                        )}
+                    <AnimatePresence mode="popLayout">
+                        {filteredClients?.map((client, index) => (
+                            <motion.div 
+                                key={client.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.4, delay: index * 0.05 }}
+                                className="group bg-white/5 border border-white/10 p-5 rounded-2xl hover:bg-white/[0.07] transition-all flex items-center justify-between hover:border-white/20"
+                            >
+                                <div className="flex items-center gap-5">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center border border-white/10 text-xl font-bold text-white shadow-lg">
+                                        {client.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-lg tracking-tight">{client.name}</h4>
+                                        <div className="flex items-center gap-4 mt-1 text-sm text-neutral-400">
+                                            {client.company && (
+                                                <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> {client.company}</span>
+                                            )}
+                                            {client.email && (
+                                                <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {client.email}</span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button variant="ghost" size="sm" className="rounded-full">
-                                    <ExternalLink className="w-4 h-4 text-neutral-400" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="rounded-full">
-                                    <MoreVertical className="w-4 h-4 text-neutral-400" />
-                                </Button>
-                            </div>
-                        </div>
-                    ))
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button variant="ghost" size="sm" className="rounded-full">
+                                        <ExternalLink className="w-4 h-4 text-neutral-400" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="rounded-full">
+                                        <MoreVertical className="w-4 h-4 text-neutral-400" />
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                 )}
             </div>
         </div>

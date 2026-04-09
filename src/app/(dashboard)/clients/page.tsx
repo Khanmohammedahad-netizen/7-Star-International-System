@@ -7,10 +7,22 @@ import { Plus, Users, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 
+import { useQuery } from "@tanstack/react-query"
+import { Client } from "@/modules/clients/types"
+import { Skeleton } from "@/components/ui/skeleton"
 import { motion } from "framer-motion"
 
 export default function ClientsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false)
+
+    const { data: clients, isLoading } = useQuery({
+        queryKey: ['clients'],
+        queryFn: async () => {
+            const res = await fetch('/api/clients')
+            const json = await res.json()
+            return json.data as Client[]
+        }
+    })
 
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 min-h-screen">
@@ -51,7 +63,11 @@ export default function ClientsPage() {
                     <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-sm relative overflow-hidden group min-h-[160px] flex items-center justify-between">
                         <div className="flex flex-col z-10">
                             <span className="text-neutral-500 text-sm font-medium uppercase tracking-widest">Total Active</span>
-                            <span className="text-5xl font-bold text-white mt-2">--</span>
+                            {isLoading ? (
+                                <Skeleton className="h-10 w-12 bg-white/5 mt-2" />
+                            ) : (
+                                <span className="text-5xl font-bold text-white mt-2">{clients?.length || 0}</span>
+                            )}
                         </div>
                         <Users className="w-20 h-20 text-white/5 absolute -bottom-4 -right-4 transition-transform group-hover:scale-110" />
                     </div>
