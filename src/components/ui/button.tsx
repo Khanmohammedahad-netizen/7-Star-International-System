@@ -2,15 +2,21 @@ import { cn } from '@/lib/utils/cn'
 import { type ButtonHTMLAttributes, forwardRef } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'gold'
     size?: 'sm' | 'md' | 'lg'
 }
 
 const variantStyles: Record<string, string> = {
-    primary: 'bg-neutral-900 text-white hover:bg-neutral-800 border-transparent',
-    secondary: 'bg-white text-neutral-700 hover:bg-neutral-50 border-neutral-300',
-    ghost: 'bg-transparent text-neutral-600 hover:bg-neutral-100 border-transparent',
+    // High-contrast white CTA — visible on all dark backgrounds
+    primary: 'bg-white text-black hover:bg-neutral-200 border-transparent font-semibold shadow-lg shadow-white/10',
+    // Subtle dark ghost with white border
+    secondary: 'bg-white/10 text-white hover:bg-white/20 border-white/20',
+    // Transparent ghost for inline actions
+    ghost: 'bg-transparent text-neutral-300 hover:text-white hover:bg-white/10 border-transparent',
+    // Danger / destructive
     danger: 'bg-red-600 text-white hover:bg-red-700 border-transparent',
+    // Gold accent CTA
+    gold: 'bg-[#C9A84C] text-black hover:bg-[#d4b060] border-transparent font-semibold shadow-lg shadow-[#C9A84C]/20',
 }
 
 const sizeStyles: Record<string, string> = {
@@ -26,7 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 ref={ref}
                 disabled={disabled}
                 className={cn(
-                    'inline-flex items-center justify-center gap-2 rounded-lg border font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+                    'inline-flex items-center justify-center gap-2 rounded-lg border font-medium transition-all focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed',
                     variantStyles[variant],
                     sizeStyles[size],
                     className

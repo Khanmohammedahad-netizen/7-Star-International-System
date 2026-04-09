@@ -4,26 +4,49 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    /* Force dark color scheme so browser-native controls (date pickers, selects) render in dark mode */
+    color-scheme: dark;
+
+    /* Background: near-black */
+    --background: 240 10% 2%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+
+    /* Cards: slightly lighter than background */
+    --card: 240 6% 6%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+
+    --popover: 240 6% 6%;
     --popover-foreground: 0 0% 98%;
+
+    /* Primary = white (high-contrast CTA on dark backgrounds) */
     --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary-foreground: 240 5.9% 5%;
+
+    /* Secondary = subtle dark ghost */
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
+
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
+
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+
+    --border: 240 4% 11%;
+    --input: 240 4% 11%;
+    --ring: 0 0% 60%;
+
     --radius: 0.5rem;
+
+    /* Chart colours */
+    --chart-1: 43 74% 55%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 217 91% 60%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 }
 
@@ -33,24 +56,59 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Inter, Arial, Helvetica, sans-serif;
+    color-scheme: dark;
   }
 }
 
-/* Custom Scrollbar for 7STAR OS */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+/* ─── 7STAR OS Premium Global Transitions ─────────────────────────── */
+* {
+  transition-property: background-color, border-color, opacity, transform, color;
+  transition-timing-function: ease;
+  transition-duration: 150ms;
 }
 
+/* ─── Glass Card Utility ──────────────────────────────────────────── */
+.glass-card {
+  @apply bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-2xl;
+}
+
+.hover-glow:hover {
+  @apply border-white/20 bg-white/[0.05] shadow-[0_0_30px_rgba(255,255,255,0.02)];
+  transform: translateY(-2px);
+}
+
+/* ─── Dark Date/Color Inputs ─────────────────────────────────────── */
+.inv-color-scheme-dark {
+  color-scheme: dark !important;
+  color: white !important;
+}
+.inv-color-scheme-dark::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* ─── Float Animation ────────────────────────────────────────────── */
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ─── Custom Scrollbar (referenced in layout.tsx) ─────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.16);
 }
