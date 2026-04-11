@@ -5,8 +5,19 @@ import { getSession } from '@/lib/auth/session'
 // PERFORMANCE: Select specific columns for speed (<1s)
 const EVENT_DETAIL_COLUMNS = '*, client:clients(name, company)'
 
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params
+function mapEventFromDB(e: any) {
+  return {
+    ...e,
+    name: e.title,
+    start_date: e.event_date,
+    type: e.type || 'corporate',
+    color: e.color || '#C9A84C',
+  }
+}
+
+export async function GET(req: Request, props: { params: Promise<{ id: string }> | { id: string } }) {
+  // Support both Next.js 14 and 15 params API gracefully
+  const params = await Promise.resolve(props.params)
   
   try {
     const session = await getSession()
@@ -23,7 +34,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
     if (error) throw error
     if (!data) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 })
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: mapEventFromDB(data) })
   } catch (error: any) {
     console.error(`API Error: GET /api/events/${params.id}`, error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })

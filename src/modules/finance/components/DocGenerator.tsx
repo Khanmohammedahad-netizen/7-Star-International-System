@@ -145,152 +145,139 @@ export function DocGenerator() {
             </CardHeader>
 
             <CardContent className="p-6">
-                <AnimatePresence mode="wait">
-                    {step === "form" ? (
-                        <motion.div
-                            key="form"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 10 }}
-                            className="space-y-6"
-                        >
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Document No.</Label>
-                                    <Input value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="h-10" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Client Name</Label>
-                                    <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="e.g. John Doe" className="h-10" />
-                                </div>
-                            </div>
-
+                {step === "form" ? (
+                    <div className="space-y-6 animate-in fade-in duration-300">
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Related Event</Label>
-                                <Select
-                                    value={selectedEventId}
-                                    onChange={(e) => setSelectedEventId(e.target.value)}
-                                    options={eventOptions}
-                                />
+                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Document No.</Label>
+                                <Input value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="h-10" />
                             </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Client Name</Label>
+                                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="e.g. John Doe" className="h-10" />
+                            </div>
+                        </div>
 
-                            {/* Line Items */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Line Items</Label>
-                                    <button type="button" onClick={addLineItem} className="text-xs text-blue-400 font-medium flex items-center gap-1 hover:text-blue-300">
-                                        <Plus className="w-3 h-3" /> Add Item
-                                    </button>
-                                </div>
-                                <div className="space-y-2">
-                                    {lineItems.map((item, i) => (
-                                        <div key={i} className="flex gap-2 items-center flex-wrap md:flex-nowrap bg-white/5 md:bg-transparent p-3 md:p-0 rounded-xl md:rounded-none">
-                                            <Input 
-                                                className="w-full md:flex-1 h-9 text-sm" 
-                                                placeholder="Description" 
-                                                value={item.description}
-                                                onChange={(e) => updateLineItem(i, 'description', e.target.value)}
-                                            />
-                                            <div className="flex gap-2 w-full md:w-auto">
-                                                <Input 
-                                                    className="w-20 h-9 text-sm" 
-                                                    type="number" 
-                                                    min="1"
-                                                    placeholder="Qty" 
-                                                    value={item.quantity}
-                                                    onChange={(e) => updateLineItem(i, 'quantity', parseInt(e.target.value) || 0)}
-                                                />
-                                                <Input 
-                                                    className="flex-1 md:w-28 h-9 text-sm" 
-                                                    type="number" 
-                                                    step="0.01"
-                                                    min="0"
-                                                    placeholder="Price" 
-                                                    value={item.unit_price}
-                                                    onChange={(e) => updateLineItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
-                                                />
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => removeLineItem(i)}
-                                                    disabled={lineItems.length === 1}
-                                                    className="w-9 h-9 flex items-center justify-center shrink-0 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50 border border-white/10 md:border-transparent"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Related Event</Label>
+                            <Select
+                                value={selectedEventId}
+                                onChange={(e) => setSelectedEventId(e.target.value)}
+                                options={eventOptions}
+                            />
+                        </div>
 
-                            {/* Totals Summary */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2">
-                                <div className="flex justify-between text-sm text-neutral-400">
-                                    <span>Subtotal</span>
-                                    <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(subtotal)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm text-neutral-400">
-                                    <span>VAT (5%)</span>
-                                    <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(vatAmount)}</span>
-                                </div>
-                                <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-white">
-                                    <span>Total</span>
-                                    <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(total)}</span>
-                                </div>
-                            </div>
-
-                            <Button
-                                onClick={handleGenerate}
-                                disabled={mutation.isPending}
-                                className="w-full h-11 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-lg border-transparent disabled:opacity-60"
-                            >
-                                {mutation.isPending ? (
-                                    <span className="flex items-center gap-2">
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                        Generating...
-                                    </span>
-                                ) : (
-                                    `Generate ${type.charAt(0).toUpperCase() + type.slice(1)}`
-                                )}
-                            </Button>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="success"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex flex-col items-center justify-center py-6 text-center space-y-4"
-                        >
-                            <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2">
-                                <CheckCircle2 className="w-10 h-10" />
-                            </div>
-                            <div>
-                                <h4 className="text-lg font-bold text-white">Document Generated</h4>
-                                <p className="text-sm text-neutral-400 mt-1">Successfully compiled and saved to database.</p>
-                            </div>
-                            <div className="flex flex-col w-full gap-2 mt-4">
-                                <Button
-                                    variant="secondary"
-                                    className="w-full h-11"
-                                    onClick={() => toast("PDF generation would happen here.")}
-                                >
-                                    <Download className="w-4 h-4 mr-2" /> Download Document
-                                </Button>
-                                <button
-                                    onClick={() => {
-                                        setDocNumber('');
-                                        setClientName('');
-                                        setLineItems([{ description: "", quantity: 1, unit_price: 0 }]);
-                                        setStep('form');
-                                    }}
-                                    className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors py-2 mt-2"
-                                >
-                                    Generate Another
+                        {/* Line Items */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Line Items</Label>
+                                <button type="button" onClick={addLineItem} className="text-xs text-blue-400 font-medium flex items-center gap-1 hover:text-blue-300">
+                                    <Plus className="w-3 h-3" /> Add Item
                                 </button>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            <div className="space-y-2">
+                                {lineItems.map((item, i) => (
+                                    <div key={i} className="flex gap-2 items-center flex-wrap md:flex-nowrap bg-white/5 md:bg-transparent p-3 md:p-0 rounded-xl md:rounded-none">
+                                        <Input 
+                                            className="w-full md:flex-1 h-9 text-sm" 
+                                            placeholder="Description" 
+                                            value={item.description}
+                                            onChange={(e) => updateLineItem(i, 'description', e.target.value)}
+                                        />
+                                        <div className="flex gap-2 w-full md:w-auto">
+                                            <Input 
+                                                className="w-20 h-9 text-sm" 
+                                                type="number" 
+                                                min="1"
+                                                placeholder="Qty" 
+                                                value={item.quantity}
+                                                onChange={(e) => updateLineItem(i, 'quantity', parseInt(e.target.value) || 0)}
+                                            />
+                                            <Input 
+                                                className="flex-1 md:w-28 h-9 text-sm" 
+                                                type="number" 
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Price" 
+                                                value={item.unit_price}
+                                                onChange={(e) => updateLineItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => removeLineItem(i)}
+                                                disabled={lineItems.length === 1}
+                                                className="w-9 h-9 flex items-center justify-center shrink-0 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50 border border-white/10 md:border-transparent"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Totals Summary */}
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2">
+                            <div className="flex justify-between text-sm text-neutral-400">
+                                <span>Subtotal</span>
+                                <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm text-neutral-400">
+                                <span>VAT (5%)</span>
+                                <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(vatAmount)}</span>
+                            </div>
+                            <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-white">
+                                <span>Total</span>
+                                <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(total)}</span>
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={handleGenerate}
+                            disabled={mutation.isPending}
+                            className="w-full h-11 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-lg border-transparent disabled:opacity-60"
+                        >
+                            {mutation.isPending ? (
+                                <span className="flex items-center gap-2">
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                    Generating...
+                                </span>
+                            ) : (
+                                `Generate ${type.charAt(0).toUpperCase() + type.slice(1)}`
+                            )}
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-center space-y-4 animate-in zoom-in-95 duration-300">
+                        <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2">
+                            <CheckCircle2 className="w-10 h-10" />
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-bold text-white">Document Generated</h4>
+                            <p className="text-sm text-neutral-400 mt-1">Successfully compiled and saved to database.</p>
+                        </div>
+                        <div className="flex flex-col w-full gap-2 mt-4">
+                            <Button
+                                variant="secondary"
+                                className="w-full h-11"
+                                onClick={() => toast("PDF generation would happen here.")}
+                            >
+                                <Download className="w-4 h-4 mr-2" /> Download Document
+                            </Button>
+                            <button
+                                onClick={() => {
+                                    setDocNumber('');
+                                    setClientName('');
+                                    setLineItems([{ description: "", quantity: 1, unit_price: 0 }]);
+                                    setStep('form');
+                                }}
+                                className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors py-2 mt-2"
+                            >
+                                Generate Another
+                            </button>
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     )
