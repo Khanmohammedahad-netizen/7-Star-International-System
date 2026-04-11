@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
 // PERFORMANCE: Select specific columns for speed (<1s)
-const EVENT_DETAIL_COLUMNS = '*, client:clients(name, company)'
+const EVENT_DETAIL_COLUMNS = '*'
 
 function mapEventFromDB(e: any) {
   return {
