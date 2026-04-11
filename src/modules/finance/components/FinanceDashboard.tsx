@@ -14,13 +14,16 @@ import {
 } from "lucide-react"
 
 export function FinanceDashboard() {
-    const { data: financeData, isLoading } = useQuery({
+    const { data: financeData, isLoading, refetch } = useQuery({
         queryKey: ['finance-summary'],
         queryFn: async () => {
             const res = await fetch('/api/finance')
+            if (!res.ok) throw new Error('Failed to fetch finance data')
             const json = await res.json()
             return json.data
-        }
+        },
+        staleTime: 0,
+        refetchOnWindowFocus: true,
     })
 
     if (isLoading) return <div className="p-8 text-center text-neutral-400 animate-pulse">Loading finance data...</div>

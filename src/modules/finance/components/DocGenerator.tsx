@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select } from "@/components/ui/select"
-import { FileText, Receipt, Download, RefreshCw, CheckCircle2, Plus, Trash2 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { FileText, Receipt, RefreshCw, CheckCircle2, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -19,6 +18,7 @@ export function DocGenerator() {
     const [step, setStep] = useState<"form" | "success">("form")
     const [docNumber, setDocNumber] = useState("")
     const [clientName, setClientName] = useState("")
+    const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0])
     const [selectedEventId, setSelectedEventId] = useState("")
     const [lineItems, setLineItems] = useState<LineItem[]>([{ description: "", quantity: 1, unit_price: 0 }])
 
@@ -72,8 +72,9 @@ export function DocGenerator() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     doc_type: type,
-                    doc_number: docNumber,
+                    doc_number: docNumber || `${type === 'quotation' ? 'QT' : 'INV'}-${Date.now()}`,
                     client_name: clientName,
+                    issue_date: issueDate,
                     event_id: selectedEventId || null,
                     subtotal,
                     line_items: lineItems
@@ -84,7 +85,8 @@ export function DocGenerator() {
             return json.data
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['finance'] })
+            // Invalidate both the finance summary (stat cards) and the finance-summary key
+            queryClient.invalidateQueries({ queryKey: ['finance-summary'] })
             queryClient.invalidateQueries({ queryKey: ['dashboard'] })
             setStep("success")
             toast.success(`${type === 'quotation' ? 'Quotation' : 'Invoice'} generated successfully`)
@@ -93,6 +95,15 @@ export function DocGenerator() {
             toast.error(error.message || "Failed to generate document")
         }
     })
+
+    const resetForm = () => {
+        setDocNumber(`${type === 'quotation' ? 'QT' : 'INV'}-${Math.floor(1000 + Math.random() * 9000)}`)
+        setClientName('')
+        setIssueDate(new Date().toISOString().split('T')[0])
+        setSelectedEventId('')
+        setLineItems([{ description: '', quantity: 1, unit_price: 0 }])
+        setStep('form')
+    }
 
     const handleGenerate = () => {
         if (!clientName) {
@@ -151,7 +162,7 @@ export function DocGenerator() {
                         </div>
                         <div className="space-y-2">
                             <Label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Issue Date</Label>
-                            <Input type="date" className="h-10 bg-[#111111] border-[#2a2a2a] text-white placeholder:text-gray-500 [color-scheme:dark]" defaultValue={new Date().toISOString().split('T')[0]} />
+                            <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="h-10 bg-[#111111] border-[#2a2a2a] text-white placeholder:text-gray-500 [color-scheme:dark]" />
                         </div>
                     </div>
                     
@@ -234,20 +245,38 @@ export function DocGenerator() {
                         </div>
                     </div>
 
-                    <Button
-                        onClick={handleGenerate}
-                        disabled={mutation.isPending}
-                        className="w-full bg-[#C9A84C] text-black font-semibold rounded-lg px-5 py-2.5 hover:bg-[#b09340] active:scale-[0.98] transition-all border-none disabled:opacity-60"
-                    >
-                        {mutation.isPending ? (
-                            <span className="flex items-center gap-2">
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                Generating...
-                            </span>
-                        ) : (
-                            `Generate ${type.charAt(0).toUpperCase() + type.slice(1)}`
-                        )}
-                    </Button>
+                    {step === 'success' ? (
+                        <div className="flex flex-col items-center gap-4 py-4 text-center">
+                            <div className="w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-white text-base">Document Generated!</p>
+                                <p className="text-sm text-gray-400 mt-1">Saved to database. Refresh to see in the table.</p>
+                            </div>
+                            <button
+                                onClick={resetForm}
+                                className="text-sm text-[#C9A84C] hover:text-white underline underline-offset-4 transition-colors mt-1"
+                            >
+                                Generate Another
+                            </button>
+                        </div>
+                    ) : (
+                        <Button
+                            onClick={handleGenerate}
+                            disabled={mutation.isPending}
+                            className="w-full bg-[#C9A84C] text-black font-semibold rounded-lg px-5 py-2.5 hover:bg-[#b09340] active:scale-[0.98] transition-all border-none disabled:opacity-60"
+                        >
+                            {mutation.isPending ? (
+                                <span className="flex items-center gap-2">
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                    Generating...
+                                </span>
+                            ) : (
+                                `Generate ${type.charAt(0).toUpperCase() + type.slice(1)}`
+                            )}
+                        </Button>
+                    )}
                 </div>
             </CardContent>
         </Card>
