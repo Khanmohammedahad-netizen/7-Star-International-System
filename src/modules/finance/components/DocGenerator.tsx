@@ -220,15 +220,15 @@ export function DocGenerator() {
                         <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2">
                             <div className="flex justify-between text-sm text-neutral-400">
                                 <span>Subtotal</span>
-                                <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(subtotal)}</span>
+                                <span>AED {subtotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-sm text-neutral-400">
                                 <span>VAT (5%)</span>
-                                <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(vatAmount)}</span>
+                                <span>AED {vatAmount.toFixed(2)}</span>
                             </div>
                             <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-white">
                                 <span>Total</span>
-                                <span>{new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(total)}</span>
+                                <span>AED {total.toFixed(2)}</span>
                             </div>
                         </div>
 

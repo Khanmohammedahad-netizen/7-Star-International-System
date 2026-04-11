@@ -29,7 +29,7 @@ export function FinanceDashboard() {
 
     // Safe number formatter — returns "0" if value is null/undefined
     const fmt = (val: number | null | undefined) =>
-        (val ?? 0).toLocaleString('en-AE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+        Math.round(val ?? 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -118,13 +118,13 @@ export function FinanceDashboard() {
                                 {financeData?.recent_invoices?.map((inv: any) => (
                                     <tr key={inv.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors group">
                                         <td className="py-4 font-mono text-xs text-neutral-500 group-hover:text-neutral-300 transition-colors">{inv.id.split('-')[0]}</td>
-                                        <td className="py-4 font-bold text-white">AED {(inv.total ?? 0).toLocaleString()}</td>
+                                        <td className="py-4 font-bold text-white">AED {fmt(inv.total)}</td>
                                         <td className="py-4">
                                             <Badge variant={inv.status === 'paid' ? 'success' : 'secondary'} className="capitalize text-[10px]">
                                                 {inv.status}
                                             </Badge>
                                         </td>
-                                        <td className="py-4 text-neutral-400 font-medium">{new Date(inv.created_at).toLocaleDateString()}</td>
+                                        <td className="py-4 text-neutral-400 font-medium">{new Date(inv.created_at).toISOString().split('T')[0]}</td>
                                     </tr>
                                 ))}
                                 {(!financeData?.recent_invoices || financeData.recent_invoices.length === 0) && (
@@ -155,7 +155,7 @@ export function FinanceDashboard() {
                                         <p className="text-xs text-neutral-500 font-medium">Approved</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-bold text-white">AED {(exp.amount ?? 0).toLocaleString()}</p>
+                                        <p className="text-sm font-bold text-white">AED {fmt(exp.amount)}</p>
                                     </div>
                                 </div>
                             ))}
