@@ -36,11 +36,19 @@ export default function CalendarPage() {
         
         const { data, error } = await supabase
           .from('events')
-          .select('id, name, status, start_date, end_date')
-          .or(`start_date.lte.${lastDay},end_date.gte.${firstDay}`)
+          .select('id, title, status, event_date, end_date')
+          .lte('event_date', lastDay)
+          .or(`event_date.gte.${firstDay},end_date.gte.${firstDay}`)
           
         if (error) throw error
-        setEvents(data || [])
+        
+        const mappedData = (data || []).map((e: any) => ({
+          ...e,
+          name: e.title,
+          start_date: e.event_date
+        }))
+        
+        setEvents(mappedData)
       } catch (err) {
         console.error('Failed to fetch events:', err)
         setEvents([])
