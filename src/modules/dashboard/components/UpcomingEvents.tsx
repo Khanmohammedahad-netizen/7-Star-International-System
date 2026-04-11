@@ -39,9 +39,9 @@ export function UpcomingEvents() {
             No upcoming events scheduled.
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="flex overflow-x-auto space-x-3 pb-2 hide-scrollbar snap-x md:flex-col md:space-x-0 md:space-y-3 md:overflow-visible md:pb-0 md:snap-none">
             {data.upcomingEvents.map((event) => (
-              <Link key={event.id} href={`/events/${event.id}`} className="block group">
+              <Link key={event.id} href={`/events/${event.id}`} className="block group shrink-0 w-[280px] snap-center md:w-auto md:shrink">
                 <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors border border-transparent hover:border-white/10">
                   <div 
                     className="w-1 h-10 rounded-full shrink-0"

@@ -184,38 +184,40 @@ export function DocGenerator() {
                                 </div>
                                 <div className="space-y-2">
                                     {lineItems.map((item, i) => (
-                                        <div key={i} className="flex gap-2 items-center">
+                                        <div key={i} className="flex gap-2 items-center flex-wrap md:flex-nowrap bg-white/5 md:bg-transparent p-3 md:p-0 rounded-xl md:rounded-none">
                                             <Input 
-                                                className="flex-1 h-9 text-sm" 
+                                                className="w-full md:flex-1 h-9 text-sm" 
                                                 placeholder="Description" 
                                                 value={item.description}
                                                 onChange={(e) => updateLineItem(i, 'description', e.target.value)}
                                             />
-                                            <Input 
-                                                className="w-20 h-9 text-sm" 
-                                                type="number" 
-                                                min="1"
-                                                placeholder="Qty" 
-                                                value={item.quantity}
-                                                onChange={(e) => updateLineItem(i, 'quantity', parseInt(e.target.value) || 0)}
-                                            />
-                                            <Input 
-                                                className="w-28 h-9 text-sm" 
-                                                type="number" 
-                                                step="0.01"
-                                                min="0"
-                                                placeholder="Price" 
-                                                value={item.unit_price}
-                                                onChange={(e) => updateLineItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
-                                            />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => removeLineItem(i)}
-                                                disabled={lineItems.length === 1}
-                                                className="w-9 h-9 flex items-center justify-center shrink-0 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                <Input 
+                                                    className="w-20 h-9 text-sm" 
+                                                    type="number" 
+                                                    min="1"
+                                                    placeholder="Qty" 
+                                                    value={item.quantity}
+                                                    onChange={(e) => updateLineItem(i, 'quantity', parseInt(e.target.value) || 0)}
+                                                />
+                                                <Input 
+                                                    className="flex-1 md:w-28 h-9 text-sm" 
+                                                    type="number" 
+                                                    step="0.01"
+                                                    min="0"
+                                                    placeholder="Price" 
+                                                    value={item.unit_price}
+                                                    onChange={(e) => updateLineItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                                                />
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => removeLineItem(i)}
+                                                    disabled={lineItems.length === 1}
+                                                    className="w-9 h-9 flex items-center justify-center shrink-0 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50 border border-white/10 md:border-transparent"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

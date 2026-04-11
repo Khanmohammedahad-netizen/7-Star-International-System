@@ -19,10 +19,18 @@ export default function VendorsPage() {
           </h1>
           <p className="text-neutral-400 mt-2 text-lg">Manage elite partners and global service providers.</p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)} className="bg-white text-black font-bold h-11 px-6 hover:bg-neutral-200">
+        <Button onClick={() => setIsAddModalOpen(true)} className="hidden md:flex bg-white text-black font-bold h-11 px-6 hover:bg-neutral-200">
           <Plus className="w-4 h-4 mr-2" /> Add New Vendor
         </Button>
       </div>
+
+      {/* Mobile FAB */}
+      <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="md:hidden fixed bottom-[84px] right-4 w-14 h-14 bg-[#C9A84C] text-black rounded-full shadow-[0_4px_20px_rgba(201,168,76,0.4)] flex items-center justify-center z-40 active:scale-95 transition-transform"
+      >
+          <Plus className="w-6 h-6 stroke-2" />
+      </button>
 
       <VendorDirectory />
 

@@ -8,15 +8,16 @@ import { DateTime } from 'luxon'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-function statusColor(status: string) {
-  switch (status) {
-    case 'planning': return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-    case 'confirmed': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-    case 'in_progress': return 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-    case 'completed': return 'bg-neutral-500/20 text-neutral-400 border-neutral-500/30'
-    case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30'
-    case 'postponed': return 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-    default: return 'bg-white/5 text-neutral-400 border-white/10'
+function getEventColor(status: string) {
+  switch (status?.toLowerCase()) {
+    case 'planning':     return 'bg-blue-500/80 text-white border-blue-500'
+    case 'confirmed':    return 'bg-emerald-500/80 text-white border-emerald-500'
+    case 'in progress':
+    case 'in_progress':  return 'bg-amber-500/80 text-black border-amber-500'
+    case 'completed':    return 'bg-zinc-500/80 text-white border-zinc-500'
+    case 'cancelled':    return 'bg-red-500/80 text-white line-through border-red-500'
+    case 'postponed':    return 'bg-purple-500/80 text-white border-purple-500'
+    default:             return 'bg-zinc-600/80 text-white border-zinc-500'
   }
 }
 
@@ -24,79 +25,132 @@ export function GlobalCalendar() {
   const router = useRouter()
   const { events, isLoading, currentDate, viewMode, setViewMode, nextPeriod, prevPeriod, goToday } = useCalendar()
 
-  // Generate Month Grid using Luxon instead of date-fns
+  // Generate Month Grid perfectly mapping to user's specified 7-col split geometry
   const generateMonthGrid = () => {
-    const start = DateTime.fromJSDate(currentDate).startOf('month').startOf('week')
-    const end = DateTime.fromJSDate(currentDate).endOf('month').endOf('week')
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()
+    const firstDayOfMonth = new Date(year, month, 1)
+    const lastDayOfMonth = new Date(year, month + 1, 0)
     
-    // Generate all days in interval
-    const days: DateTime[] = []
-    let current = start
-    while (current <= end) {
-      days.push(current)
-      current = current.plus({ days: 1 })
+    // Get Monday-based start (0=Mon, 6=Sun)
+    let startDow = firstDayOfMonth.getDay() // 0=Sun,1=Mon...6=Sat
+    startDow = startDow === 0 ? 6 : startDow - 1 // convert to Mon=0
+    
+    const days = []
+    
+    // Fill leading days from previous month
+    for (let i = startDow - 1; i >= 0; i--) {
+      const date = new Date(year, month, -i)
+      days.push({ date, dayNumber: date.getDate(), isCurrentMonth: false, isToday: false, events: [] })
+    }
+    
+    // Fill current month days
+    const today = new Date()
+    for (let d = 1; d <= lastDayOfMonth.getDate(); d++) {
+      const date = new Date(year, month, d)
+      const isToday = date.toDateString() === today.toDateString()
+      const dayEvents = (events || []).filter((e: any) => {
+        const start = new Date(e.start_date)
+        const end = new Date(e.end_date || e.start_date)
+        // Reset hours for pure date tracking
+        start.setHours(0,0,0,0)
+        end.setHours(0,0,0,0)
+        return date >= start && date <= end
+      })
+      days.push({ date, dayNumber: d, isCurrentMonth: true, isToday, events: dayEvents })
+    }
+    
+    // Fill trailing days to complete the grid (must be multiple of 7)
+    const remaining = 7 - (days.length % 7)
+    if (remaining < 7) {
+      for (let d = 1; d <= remaining; d++) {
+        const date = new Date(year, month + 1, d)
+        days.push({ date, dayNumber: d, isCurrentMonth: false, isToday: false, events: [] })
+      }
     }
 
     return (
-      <div className="grid grid-cols-7 gap-px bg-white/10 border border-white/10 rounded-xl overflow-hidden mt-4 shadow-xl">
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-          <div key={d} className="bg-[#111111] p-3 text-center text-xs font-bold text-neutral-400 uppercase tracking-widest border-b border-white/10">
-            {d}
-          </div>
-        ))}
-        {days.map(day => {
-          const dayString = day.toFormat('yyyy-MM-dd')
-          const dayEvents = (events || []).filter(e => e.start_date === dayString)
-          const isToday = day.hasSame(DateTime.now(), 'day')
-          const isCurrentMonth = day.hasSame(DateTime.fromJSDate(currentDate), 'month')
-
-          return (
+      <div className="flex flex-col h-full bg-[#0a0a0a] border border-zinc-800 rounded-xl overflow-hidden mt-4 shadow-xl">
+        
+        {/* Day headers row */}
+        <div className="grid grid-cols-7 border-b border-zinc-800 bg-[#111111]">
+          {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
             <div 
-              key={day.toISO()} 
-              onClick={() => {
-                // Navigate to new event prefilled with this date if clicked on empty space
-                document.getElementById(`link-new-event`)?.click()
-                // Actually we can just route imperatively:
-                // router.push(`/events/new`) 
-                // But a real implementation would pass the date
-              }}
-              className={`min-h-[140px] bg-[#0a0a0a] p-2 transition-colors hover:bg-white/[0.02] cursor-pointer group relative ${!isCurrentMonth ? 'text-neutral-600 bg-black/40' : ''}`}
+              key={day} 
+              className="py-2 md:py-3 text-center text-[10px] md:text-xs font-semibold text-zinc-400 tracking-widest border-r border-zinc-800 last:border-r-0"
             >
-              <div className="flex justify-between items-center mb-1">
-                <span className={`text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'text-neutral-300'}`}>
-                  {day.toFormat('d')}
-                </span>
-                
-                {/* Hover Add Button */}
-                <Link 
-                  href={`/events/new`}
-                  id="link-new-event"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded-md text-neutral-400 hover:text-white"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </Link>
+              <span className="hidden md:inline">{day}</span>
+              <span className="md:hidden">{day.charAt(0)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 flex-1">
+          {days.map((day, index) => (
+            <div
+              key={index}
+              onClick={() => {
+                document.getElementById(`link-new-event`)?.click()
+              }}
+              className={`
+                min-h-[80px] md:min-h-[120px] p-1.5 border-r border-b border-zinc-800 
+                last:border-r-0 relative group
+                ${!day.isCurrentMonth ? 'bg-zinc-900/50' : 'bg-transparent'}
+                ${day.isToday ? 'ring-1 ring-inset ring-[#C9A84C]/60 z-10' : ''}
+                hover:bg-zinc-800/40 cursor-pointer transition-colors
+              `}
+            >
+              <div className="flex justify-between items-start">
+                  <span className={`
+                    text-xs md:text-sm font-medium inline-flex items-center justify-center 
+                    w-6 h-6 md:w-7 md:h-7 rounded-full
+                    ${day.isToday 
+                      ? 'bg-[#C9A84C] text-black font-bold shadow-[0_0_15px_rgba(201,168,76,0.3)]' 
+                      : day.isCurrentMonth 
+                        ? 'text-white' 
+                        : 'text-zinc-600'
+                    }
+                  `}>
+                    {day.dayNumber}
+                  </span>
+                  
+                  {/* Hover Add Button */}
+                  <Link 
+                    href={`/events/new`}
+                    id="link-new-event"
+                    className="hidden md:inline-flex opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-white"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </Link>
               </div>
 
-              <div className="space-y-1.5 mt-2">
-                {dayEvents.slice(0, 4).map(e => (
-                  <Link key={e.id} href={`/events/${e.id}`} onClick={(ev) => ev.stopPropagation()}>
-                    <div 
-                      className={`text-xs px-2 py-1 rounded border-l-[3px] truncate font-medium transition-all hover:scale-[1.02] ${statusColor(e.status)}`}
+              {/* Event chips */}
+              <div className="mt-1 space-y-0.5">
+                {day.events.slice(0, 2).map((event: any) => (
+                  <Link key={event.id} href={`/events/${event.id}`} onClick={(e) => e.stopPropagation()} className="block">
+                    <div
+                      className={`
+                        text-[9px] md:text-xs px-1 md:px-1.5 py-0.5 md:py-1 rounded truncate cursor-pointer
+                        hover:opacity-80 transition-opacity font-medium border-l-[2px] md:border-l-[3px]
+                        ${getEventColor(event.status)}
+                      `}
+                      title={event.name}
                     >
-                      {e.name}
+                      {event.name}
                     </div>
                   </Link>
                 ))}
-                {dayEvents.length > 4 && (
-                  <div className="text-xs font-bold text-neutral-500 pl-1">
-                    + {dayEvents.length - 4} more
+                {day.events.length > 2 && (
+                  <div className="text-[9px] md:text-xs text-zinc-400 px-1 pt-0.5 font-bold hover:text-white cursor-pointer" title="More events">
+                    +{day.events.length - 2} more
                   </div>
                 )}
               </div>
             </div>
-          )
-        })}
+          ))}
+        </div>
       </div>
     )
   }
@@ -106,12 +160,12 @@ export function GlobalCalendar() {
       
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111111] border border-white/10 rounded-xl p-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={prevPeriod} className="hover:bg-white/10"><ChevronLeft className="w-5 h-5 text-white" /></Button>
-          <Button variant="secondary" size="sm" onClick={goToday} className="font-bold bg-white/10 text-white hover:bg-white/20">Today</Button>
-          <Button variant="ghost" size="icon" onClick={nextPeriod} className="hover:bg-white/10"><ChevronRight className="w-5 h-5 text-white" /></Button>
+        <div className="flex items-center gap-1 md:gap-3 flex-1 overflow-hidden">
+          <Button variant="ghost" size="icon" onClick={prevPeriod} className="hover:bg-white/10 shrink-0"><ChevronLeft className="w-5 h-5 text-white" /></Button>
+          <Button variant="secondary" size="sm" onClick={goToday} className="font-bold bg-white/10 text-white hover:bg-white/20 hidden md:inline-flex shrink-0">Today</Button>
+          <Button variant="ghost" size="icon" onClick={nextPeriod} className="hover:bg-white/10 shrink-0"><ChevronRight className="w-5 h-5 text-white" /></Button>
           
-          <h2 className="text-2xl font-bold ml-4 w-60 tracking-tight text-white" style={{ fontFamily: 'var(--font-cormorant)' }}>
+          <h2 className="text-lg md:text-2xl font-bold ml-1 md:ml-4 tracking-tight text-white truncate" style={{ fontFamily: 'var(--font-cormorant)' }}>
             {viewMode === 'month' && DateTime.fromJSDate(currentDate).toFormat('MMMM yyyy')}
             {viewMode === 'week' && `Week of ${DateTime.fromJSDate(currentDate).startOf('week').toFormat('MMM d')}`}
             {viewMode === 'day' && DateTime.fromJSDate(currentDate).toFormat('MMMM d, yyyy')}
@@ -120,10 +174,20 @@ export function GlobalCalendar() {
 
         <div className="flex items-center gap-2">
           {/* Status Legend */}
-          <div className="hidden lg:flex items-center gap-3 mr-6 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" /> Planning</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Confirmed</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" /> In Progress</span>
+          <div className="hidden lg:flex items-center gap-4 mr-6">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">STATUS:</span>
+            {[
+              { label: 'Planning',    color: 'bg-blue-500' },
+              { label: 'Confirmed',   color: 'bg-emerald-500' },
+              { label: 'In Progress', color: 'bg-amber-500' },
+              { label: 'Completed',   color: 'bg-zinc-500' },
+              { label: 'Cancelled',   color: 'bg-red-500' },
+            ].map(s => (
+              <div key={s.label} className="flex items-center gap-1.5">
+                <div className={`w-2 h-2 rounded-full ${s.color}`} />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">{s.label}</span>
+              </div>
+            ))}
           </div>
 
           <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">

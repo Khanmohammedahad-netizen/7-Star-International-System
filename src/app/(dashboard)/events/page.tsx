@@ -26,11 +26,13 @@ export default function EventsListPage() {
           <h1 className="text-3xl font-bold tracking-tight">Active Events</h1>
           <p className="text-muted-foreground mt-1">Manage and coordinate all ongoing and upcoming events.</p>
         </div>
-        <Link href="/events/new">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" /> New Event
-          </Button>
-        </Link>
+        <div className="fixed bottom-[84px] left-4 right-4 z-40 md:relative md:inset-auto md:w-auto">
+          <Link href="/events/new">
+            <Button className="w-full md:w-auto shadow-2xl md:shadow-none h-12 md:h-10 border border-white/10 md:border-transparent bg-white text-black font-bold">
+              <Plus className="w-4 h-4 mr-2" /> New Event
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center gap-4 max-w-md relative">

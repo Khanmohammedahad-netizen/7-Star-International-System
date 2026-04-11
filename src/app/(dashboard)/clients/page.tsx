@@ -45,12 +45,20 @@ export default function ClientsPage() {
                     
                     <Button 
                         onClick={() => setIsModalOpen(true)}
-                        className="h-11 px-8 rounded-xl bg-white text-black font-bold hover:bg-neutral-200 transition-all flex items-center gap-2 shadow-2xl shadow-white/10 border-transparent"
+                        className="hidden md:flex h-11 px-8 rounded-xl bg-white text-black font-bold hover:bg-neutral-200 transition-all items-center gap-2 shadow-2xl shadow-white/10 border-transparent"
                     >
                         <Plus className="w-5 h-5" /> Add New Client
                     </Button>
                 </div>
             </motion.div>
+
+            {/* Mobile FAB */}
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className="md:hidden fixed bottom-[84px] right-4 w-14 h-14 bg-[#C9A84C] text-black rounded-full shadow-[0_4px_20px_rgba(201,168,76,0.4)] flex items-center justify-center z-40 active:scale-95 transition-transform"
+            >
+                <Plus className="w-6 h-6 stroke-2" />
+            </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Stats Summary Panel */}

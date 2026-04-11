@@ -175,11 +175,11 @@ export function EventForm() {
                 <Textarea id="notes" {...register('notes')} placeholder="General setup requirements, special requests, important notes..." rows={4} className="border-white/10 bg-white/5" />
             </div>
 
-            <div className="flex justify-end gap-4 pt-10 border-t border-white/5 mt-8">
-                <Button type="button" variant="ghost" onClick={() => router.back()} className="h-12 px-8 text-neutral-400 hover:text-white hover:bg-white/5 transition-all">
+            <div className="sticky bottom-[68px] md:static z-40 bg-[#050505]/95 backdrop-blur-md md:bg-transparent -mx-6 px-6 py-4 md:p-0 md:mx-0 border-t border-white/10 md:border-white/5 flex flex-col-reverse md:flex-row justify-end gap-3 md:gap-4 md:pt-10 md:mt-8">
+                <Button type="button" variant="ghost" onClick={() => router.back()} className="h-[52px] w-full md:w-auto px-8 text-neutral-400 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">
                     Cancel
                 </Button>
-                <Button type="submit" disabled={isPending} className="h-12 px-12 bg-white text-black font-bold hover:bg-neutral-200 transition-all shadow-xl shadow-white/5 disabled:opacity-50">
+                <Button type="submit" disabled={isPending} className="h-[52px] w-full md:w-auto px-12 bg-white text-black font-bold hover:bg-neutral-200 transition-all shadow-xl shadow-white/5 disabled:opacity-50 min-h-[48px]">
                     {isPending ? (
                         <span className="flex items-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" />

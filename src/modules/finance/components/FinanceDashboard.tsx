@@ -34,60 +34,60 @@ export function FinanceDashboard() {
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
                     <div className="absolute -right-4 -bottom-4 bg-emerald-500/5 rounded-full w-24 h-24 group-hover:scale-150 transition-transform duration-700" />
-                    <div className="flex justify-between items-start relative">
+                    <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center relative gap-3">
                         <div>
-                            <p className="text-sm text-neutral-400 font-medium">Total Revenue</p>
-                            <h3 className="text-2xl font-bold mt-1 text-white">
+                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Total Revenue</p>
+                            <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
                                 AED <span className="tabular-nums">{fmt(summary?.total_revenue)}</span>
                             </h3>
                         </div>
-                        <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                            <TrendingUp className="w-5 h-5" />
+                        <div className="p-1.5 md:p-2 bg-emerald-500/10 rounded-lg text-emerald-400 w-fit">
+                            <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
-                    <div className="flex justify-between items-start">
+                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+                    <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center gap-3">
                         <div>
-                            <p className="text-sm text-neutral-400 font-medium">Pending Payments</p>
-                            <h3 className="text-2xl font-bold mt-1 text-white">
+                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Pending</p>
+                            <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
                                 AED <span className="tabular-nums">{fmt(summary?.pending_payments)}</span>
                             </h3>
                         </div>
-                        <div className="p-2 bg-orange-500/10 rounded-lg text-orange-400">
-                            <Clock className="w-5 h-5" />
+                        <div className="p-1.5 md:p-2 bg-orange-500/10 rounded-lg text-orange-400 w-fit">
+                            <Clock className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
-                    <div className="flex justify-between items-start">
+                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+                    <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center gap-3">
                         <div>
-                            <p className="text-sm text-neutral-400 font-medium">Total Expenses</p>
-                            <h3 className="text-2xl font-bold mt-1 text-white">
+                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Expenses</p>
+                            <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
                                 AED <span className="tabular-nums">{fmt(summary?.total_expenses)}</span>
                             </h3>
                         </div>
-                        <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
-                            <ArrowDownRight className="w-5 h-5" />
+                        <div className="p-1.5 md:p-2 bg-red-500/10 rounded-lg text-red-400 w-fit">
+                            <ArrowDownRight className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
-                    <div className="flex justify-between items-start">
+                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+                    <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center gap-3">
                         <div>
-                            <p className="text-sm text-neutral-400 font-medium">Net Profit</p>
-                            <h3 className="text-2xl font-bold mt-1 text-white">
+                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Net Profit</p>
+                            <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
                                 AED <span className="tabular-nums">{fmt(summary?.net_profit)}</span>
                             </h3>
                         </div>
-                        <div className="p-2 bg-white/5 rounded-lg text-white">
-                            <ArrowUpRight className="w-5 h-5" />
+                        <div className="p-1.5 md:p-2 bg-white/5 rounded-lg text-white w-fit">
+                            <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                 </Card>

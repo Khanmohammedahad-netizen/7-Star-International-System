@@ -53,12 +53,19 @@
 @layer base {
   * {
     @apply border-border;
+    touch-action: manipulation;
   }
   body {
     @apply bg-background text-foreground;
     font-family: Inter, Arial, Helvetica, sans-serif;
     color-scheme: dark;
   }
+
+  /* Responsive Typography Clamps */
+  h1 { font-size: clamp(1.25rem, 4vw, 2rem) !important; }
+  h2 { font-size: clamp(1.125rem, 3.5vw, 1.75rem) !important; }
+  h3 { font-size: clamp(1rem, 3vw, 1.5rem) !important; }
+  h4 { font-size: clamp(0.9rem, 2.5vw, 1.25rem) !important; }
 }
 
 /* ─── 7STAR OS Premium Global Transitions ─────────────────────────── */
@@ -98,9 +105,18 @@
   animation: float 6s ease-in-out infinite;
 }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ─── Custom Scrollbar (referenced in layout.tsx) ─────────────────── */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
@@ -111,4 +127,13 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.16);
+}
+
+/* Base scrollbar hide for horizontal scrollers on mobile */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
