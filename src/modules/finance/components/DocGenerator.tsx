@@ -107,25 +107,23 @@ export function DocGenerator() {
     }
 
     return (
-        <Card className="bg-[#111111] border-white/10 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] via-transparent to-transparent pointer-events-none" />
-
-            <CardHeader className="border-b border-white/10 pb-4">
+        <Card className="bg-[#1a1a1a] border border-[#2a2a2a] overflow-hidden sticky top-6">
+            <CardHeader className="border-b border-[#2a2a2a] pb-4 bg-[#111111]/50">
                 <div className="flex items-center justify-between">
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
                         {type === 'quotation'
-                            ? <FileText className="w-4 h-4 text-blue-400" />
-                            : <Receipt className="w-4 h-4 text-emerald-400" />
+                            ? <FileText className="w-4 h-4 text-[#C9A84C]" />
+                            : <Receipt className="w-4 h-4 text-[#C9A84C]" />
                         }
                         {type === 'quotation' ? 'Quotation Generator' : 'Invoice Generator'}
                     </h3>
-                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                    <div className="flex bg-[#111111] p-1 rounded-xl border border-[#2a2a2a]">
                         <button
                             onClick={() => { setType('quotation'); setDocNumber(''); setStep('form'); }}
                             className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                                 type === 'quotation'
-                                    ? 'bg-white text-black shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-300'
+                                    ? 'bg-[#C9A84C] text-black shadow-sm'
+                                    : 'text-gray-400 hover:text-white'
                             }`}
                         >
                             Quotation
@@ -134,8 +132,8 @@ export function DocGenerator() {
                             onClick={() => { setType('invoice'); setDocNumber(''); setStep('form'); }}
                             className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                                 type === 'invoice'
-                                    ? 'bg-white text-black shadow-sm'
-                                    : 'text-neutral-500 hover:text-neutral-300'
+                                    ? 'bg-[#C9A84C] text-black shadow-sm'
+                                    : 'text-gray-400 hover:text-white'
                             }`}
                         >
                             Invoice
@@ -145,139 +143,112 @@ export function DocGenerator() {
             </CardHeader>
 
             <CardContent className="p-6">
-                {step === "form" ? (
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Document No.</Label>
-                                <Input value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="h-10" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Client Name</Label>
-                                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="e.g. John Doe" className="h-10" />
-                            </div>
-                        </div>
-
+                <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Related Event</Label>
-                            <Select
-                                value={selectedEventId}
-                                onChange={(e) => setSelectedEventId(e.target.value)}
-                                options={eventOptions}
-                            />
+                            <Label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Document No.</Label>
+                            <Input value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="h-10 bg-[#111111] border-[#2a2a2a] text-white placeholder:text-gray-500" />
                         </div>
-
-                        {/* Line Items */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Line Items</Label>
-                                <button type="button" onClick={addLineItem} className="text-xs text-blue-400 font-medium flex items-center gap-1 hover:text-blue-300">
-                                    <Plus className="w-3 h-3" /> Add Item
-                                </button>
-                            </div>
-                            <div className="space-y-2">
-                                {lineItems.map((item, i) => (
-                                    <div key={i} className="flex gap-2 items-center flex-wrap md:flex-nowrap bg-white/5 md:bg-transparent p-3 md:p-0 rounded-xl md:rounded-none">
-                                        <Input 
-                                            className="w-full md:flex-1 h-9 text-sm" 
-                                            placeholder="Description" 
-                                            value={item.description}
-                                            onChange={(e) => updateLineItem(i, 'description', e.target.value)}
-                                        />
-                                        <div className="flex gap-2 w-full md:w-auto">
-                                            <Input 
-                                                className="w-20 h-9 text-sm" 
-                                                type="number" 
-                                                min="1"
-                                                placeholder="Qty" 
-                                                value={item.quantity}
-                                                onChange={(e) => updateLineItem(i, 'quantity', parseInt(e.target.value) || 0)}
-                                            />
-                                            <Input 
-                                                className="flex-1 md:w-28 h-9 text-sm" 
-                                                type="number" 
-                                                step="0.01"
-                                                min="0"
-                                                placeholder="Price" 
-                                                value={item.unit_price}
-                                                onChange={(e) => updateLineItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
-                                            />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => removeLineItem(i)}
-                                                disabled={lineItems.length === 1}
-                                                className="w-9 h-9 flex items-center justify-center shrink-0 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50 border border-white/10 md:border-transparent"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Issue Date</Label>
+                            <Input type="date" className="h-10 bg-[#111111] border-[#2a2a2a] text-white placeholder:text-gray-500 [color-scheme:dark]" defaultValue={new Date().toISOString().split('T')[0]} />
                         </div>
-
-                        {/* Totals Summary */}
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2">
-                            <div className="flex justify-between text-sm text-neutral-400">
-                                <span>Subtotal</span>
-                                <span>AED {subtotal.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm text-neutral-400">
-                                <span>VAT (5%)</span>
-                                <span>AED {vatAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-white">
-                                <span>Total</span>
-                                <span>AED {total.toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <Button
-                            onClick={handleGenerate}
-                            disabled={mutation.isPending}
-                            className="w-full h-11 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-lg border-transparent disabled:opacity-60"
-                        >
-                            {mutation.isPending ? (
-                                <span className="flex items-center gap-2">
-                                    <RefreshCw className="w-4 h-4 animate-spin" />
-                                    Generating...
-                                </span>
-                            ) : (
-                                `Generate ${type.charAt(0).toUpperCase() + type.slice(1)}`
-                            )}
-                        </Button>
                     </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-center space-y-4 animate-in zoom-in-95 duration-300">
-                        <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2">
-                            <CheckCircle2 className="w-10 h-10" />
-                        </div>
-                        <div>
-                            <h4 className="text-lg font-bold text-white">Document Generated</h4>
-                            <p className="text-sm text-neutral-400 mt-1">Successfully compiled and saved to database.</p>
-                        </div>
-                        <div className="flex flex-col w-full gap-2 mt-4">
-                            <Button
-                                variant="secondary"
-                                className="w-full h-11"
-                                onClick={() => toast("PDF generation would happen here.")}
-                            >
-                                <Download className="w-4 h-4 mr-2" /> Download Document
-                            </Button>
-                            <button
-                                onClick={() => {
-                                    setDocNumber('');
-                                    setClientName('');
-                                    setLineItems([{ description: "", quantity: 1, unit_price: 0 }]);
-                                    setStep('form');
-                                }}
-                                className="text-neutral-500 text-xs hover:text-neutral-300 transition-colors py-2 mt-2"
-                            >
-                                Generate Another
+                    
+                    <div className="space-y-2">
+                        <Label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Client Name</Label>
+                        <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="e.g. John Doe" className="h-10 bg-[#111111] border-[#2a2a2a] text-white placeholder:text-gray-500" />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Select Related Event (Optional)</Label>
+                        <Select
+                            value={selectedEventId}
+                            onChange={(e) => setSelectedEventId(e.target.value)}
+                            options={eventOptions}
+                        />
+                    </div>
+
+                    {/* Line Items */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Line Items</Label>
+                            <button type="button" onClick={addLineItem} className="text-xs text-[#C9A84C] font-medium flex items-center gap-1 hover:text-white transition-colors">
+                                <Plus className="w-3 h-3" /> Add Item
                             </button>
                         </div>
+                        <div className="space-y-2">
+                            {lineItems.map((item, i) => (
+                                <div key={i} className="flex gap-2 items-center flex-wrap md:flex-nowrap bg-[#111111] border border-[#2a2a2a] p-3 md:p-3 rounded-xl">
+                                    <Input 
+                                        className="w-full md:flex-1 h-9 text-sm bg-transparent border-none text-white placeholder:text-gray-500 focus:ring-0 px-0" 
+                                        placeholder="Description" 
+                                        value={item.description}
+                                        onChange={(e) => updateLineItem(i, 'description', e.target.value)}
+                                    />
+                                    <div className="flex gap-2 w-full md:w-auto items-center">
+                                        <Input 
+                                            className="w-16 h-9 text-sm bg-transparent border-none text-white placeholder:text-gray-500 text-center" 
+                                            type="number" 
+                                            min="1"
+                                            placeholder="Qty" 
+                                            value={item.quantity}
+                                            onChange={(e) => updateLineItem(i, 'quantity', parseInt(e.target.value) || 0)}
+                                        />
+                                        <Input 
+                                            className="w-24 h-9 text-sm bg-transparent border-none text-white placeholder:text-gray-500 text-right" 
+                                            type="number" 
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="Price" 
+                                            value={item.unit_price}
+                                            onChange={(e) => updateLineItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => removeLineItem(i)}
+                                            disabled={lineItems.length === 1}
+                                            className="ml-2 w-8 h-8 flex items-center justify-center shrink-0 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50 transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                )}
+
+                    {/* Totals Summary */}
+                    <div className="bg-[#111111] rounded-xl p-4 border border-[#2a2a2a] space-y-2 mt-4">
+                        <div className="flex justify-between text-sm text-gray-400">
+                            <span>Subtotal</span>
+                            <span className="text-white">AED {subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-gray-400">
+                            <span>VAT (5%)</span>
+                            <span className="text-white">AED {vatAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="pt-2 border-t border-[#2a2a2a] flex justify-between font-bold text-white">
+                            <span>Total</span>
+                            <span className="text-[#C9A84C]">AED {total.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <Button
+                        onClick={handleGenerate}
+                        disabled={mutation.isPending}
+                        className="w-full bg-[#C9A84C] text-black font-semibold rounded-lg px-5 py-2.5 hover:bg-[#b09340] active:scale-[0.98] transition-all border-none disabled:opacity-60"
+                    >
+                        {mutation.isPending ? (
+                            <span className="flex items-center gap-2">
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                Generating...
+                            </span>
+                        ) : (
+                            `Generate ${type.charAt(0).toUpperCase() + type.slice(1)}`
+                        )}
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )

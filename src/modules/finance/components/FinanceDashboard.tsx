@@ -35,13 +35,13 @@ export function FinanceDashboard() {
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Stats Overview */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
-                    <div className="absolute -right-4 -bottom-4 bg-emerald-500/5 rounded-full w-24 h-24 group-hover:scale-150 transition-transform duration-700" />
+                <Card className="p-4 md:p-6 bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#1a1a1a]/80 transition-all group overflow-hidden relative">
                     <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center relative gap-3">
                         <div>
-                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Total Revenue</p>
+                            <p className="text-xs md:text-sm text-gray-400 font-medium">Total Revenue</p>
                             <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
-                                AED <span className="tabular-nums">{fmt(summary?.total_revenue)}</span>
+                                <span className="text-gray-400 mr-1 text-sm font-normal">AED</span>
+                                <span className="tabular-nums">{fmt(summary?.total_revenue)}</span>
                             </h3>
                         </div>
                         <div className="p-1.5 md:p-2 bg-emerald-500/10 rounded-lg text-emerald-400 w-fit">
@@ -50,43 +50,46 @@ export function FinanceDashboard() {
                     </div>
                 </Card>
 
-                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+                <Card className="p-4 md:p-6 bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#1a1a1a]/80 transition-all group overflow-hidden relative">
                     <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center gap-3">
                         <div>
-                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Pending</p>
+                            <p className="text-xs md:text-sm text-gray-400 font-medium">Pending</p>
                             <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
-                                AED <span className="tabular-nums">{fmt(summary?.pending_payments)}</span>
+                                <span className="text-gray-400 mr-1 text-sm font-normal">AED</span>
+                                <span className="tabular-nums">{fmt(summary?.pending_payments)}</span>
                             </h3>
                         </div>
-                        <div className="p-1.5 md:p-2 bg-orange-500/10 rounded-lg text-orange-400 w-fit">
+                        <div className="p-1.5 md:p-2 bg-amber-500/10 rounded-lg text-amber-500 w-fit">
                             <Clock className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+                <Card className="p-4 md:p-6 bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#1a1a1a]/80 transition-all group overflow-hidden relative">
                     <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center gap-3">
                         <div>
-                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Expenses</p>
+                            <p className="text-xs md:text-sm text-gray-400 font-medium">Expenses</p>
                             <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
-                                AED <span className="tabular-nums">{fmt(summary?.total_expenses)}</span>
+                                <span className="text-gray-400 mr-1 text-sm font-normal">AED</span>
+                                <span className="tabular-nums">{fmt(summary?.total_expenses)}</span>
                             </h3>
                         </div>
-                        <div className="p-1.5 md:p-2 bg-red-500/10 rounded-lg text-red-400 w-fit">
+                        <div className="p-1.5 md:p-2 bg-red-500/10 rounded-lg text-red-500 w-fit">
                             <ArrowDownRight className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-4 md:p-6 bg-white/5 border-white/10 hover:border-white/20 transition-all group overflow-hidden relative">
+                <Card className="p-4 md:p-6 bg-[#1a1a1a] border border-[#2a2a2a] hover:bg-[#1a1a1a]/80 transition-all group overflow-hidden relative">
                     <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center gap-3">
                         <div>
-                            <p className="text-xs md:text-sm text-neutral-400 font-medium">Net Profit</p>
-                            <h3 className="text-base md:text-2xl font-bold mt-1 text-white">
-                                AED <span className="tabular-nums">{fmt(summary?.net_profit)}</span>
+                            <p className="text-xs md:text-sm text-gray-400 font-medium">Net Profit</p>
+                            <h3 className="text-base md:text-2xl font-bold mt-1 text-[#C9A84C]">
+                                <span className="text-gray-400 mr-1 text-sm font-normal">AED</span>
+                                <span className="tabular-nums">{fmt(summary?.net_profit)}</span>
                             </h3>
                         </div>
-                        <div className="p-1.5 md:p-2 bg-white/5 rounded-lg text-white w-fit">
+                        <div className="p-1.5 md:p-2 bg-[#C9A84C]/10 rounded-lg text-[#C9A84C] w-fit">
                             <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
@@ -95,18 +98,18 @@ export function FinanceDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Invoices */}
-                <Card className="lg:col-span-2 p-6 bg-white/5 border-white/10 flex flex-col">
+                <Card className="lg:col-span-2 p-6 bg-[#1a1a1a] border border-[#2a2a2a] flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Receipt className="w-5 h-5 text-white/60" />
+                            <Receipt className="w-5 h-5 text-[#C9A84C]" />
                             Recent Invoices
                         </h3>
-                        <Badge variant="outline" className="border-white/20 text-neutral-400">Last 10 Activity</Badge>
+                        <Badge variant="outline" className="border-[#2a2a2a] text-gray-400 bg-[#111111]">Last 10 Activity</Badge>
                     </div>
                     
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="text-xs text-neutral-400 uppercase tracking-wider border-b border-white/10">
+                            <thead className="text-xs text-gray-400 uppercase tracking-wider border-b border-[#2a2a2a]">
                                 <tr>
                                     <th className="pb-3 font-semibold">ID</th>
                                     <th className="pb-3 font-semibold">Amount</th>
@@ -116,20 +119,20 @@ export function FinanceDashboard() {
                             </thead>
                             <tbody className="text-sm">
                                 {financeData?.recent_invoices?.map((inv: any) => (
-                                    <tr key={inv.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors group">
-                                        <td className="py-4 font-mono text-xs text-neutral-500 group-hover:text-neutral-300 transition-colors">{inv.id.split('-')[0]}</td>
+                                    <tr key={inv.id} className="border-b border-[#2a2a2a] hover:bg-[#111111] transition-colors group">
+                                        <td className="py-4 font-mono text-xs text-gray-400">{inv.id.split('-')[0]}</td>
                                         <td className="py-4 font-bold text-white">AED {fmt(inv.total)}</td>
                                         <td className="py-4">
                                             <Badge variant={inv.status === 'paid' ? 'success' : 'secondary'} className="capitalize text-[10px]">
                                                 {inv.status}
                                             </Badge>
                                         </td>
-                                        <td className="py-4 text-neutral-400 font-medium">{new Date(inv.created_at).toISOString().split('T')[0]}</td>
+                                        <td className="py-4 text-gray-400 font-medium">{new Date(inv.created_at).toISOString().split('T')[0]}</td>
                                     </tr>
                                 ))}
                                 {(!financeData?.recent_invoices || financeData.recent_invoices.length === 0) && (
                                     <tr>
-                                        <td colSpan={4} className="py-8 text-center text-neutral-500 italic">No invoices found</td>
+                                        <td colSpan={4} className="py-12 text-center text-gray-500 italic">No invoices found</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -138,21 +141,21 @@ export function FinanceDashboard() {
                 </Card>
 
                 {/* Expenses Breakdown */}
-                <Card className="p-6 bg-white/5 border-white/10 h-full">
+                <Card className="p-6 bg-[#1a1a1a] border border-[#2a2a2a] h-full">
                     <div className="flex flex-col h-full">
                         <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-                            <FileText className="w-5 h-5 text-red-400" />
+                            <FileText className="w-5 h-5 text-red-500" />
                             Recent Expenses
                         </h3>
                         <div className="space-y-4 flex-1">
                             {financeData?.recent_expenses?.map((exp: any) => (
-                                <div key={exp.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all group">
-                                    <div className="w-10 h-10 rounded-full bg-red-400/10 flex items-center justify-center text-red-400 shrink-0">
+                                <div key={exp.id} className="flex items-center gap-4 p-3 rounded-xl bg-[#111111] border border-[#2a2a2a] hover:bg-[#111111]/80 transition-all group">
+                                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0">
                                         <span className="text-xs font-bold font-mono">{(exp.category?.[0] ?? '?').toUpperCase()}</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-bold text-white truncate capitalize">{exp.category}</p>
-                                        <p className="text-xs text-neutral-500 font-medium">Approved</p>
+                                        <p className="text-xs text-gray-400 font-medium">{exp.description}</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-bold text-white">AED {fmt(exp.amount)}</p>
@@ -160,7 +163,7 @@ export function FinanceDashboard() {
                                 </div>
                             ))}
                             {(!financeData?.recent_expenses || financeData.recent_expenses.length === 0) && (
-                                <div className="py-12 text-center text-neutral-500 italic">No recent expenses</div>
+                                <div className="py-12 text-center text-gray-500 italic">No expenses found</div>
                             )}
                         </div>
                     </div>
