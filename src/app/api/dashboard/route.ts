@@ -17,6 +17,7 @@ export async function GET() {
       paidInvoicesResult,
       upcomingEventsResult,
       recentActivityResult,
+      criticalAlertsResult,
     ] = await Promise.all([
       // Count confirmed/in_progress events
       supabase
@@ -48,6 +49,14 @@ export async function GET() {
         .eq('org_id', session.organizationId)
         .order('created_at', { ascending: false })
         .limit(10),
+
+      // Critical alerts (e.g. pending payments > 30 days)
+      supabase
+        .from('invoices')
+        .select('*')
+        .eq('org_id', session.organizationId)
+        .eq('status', 'pending')
+        .limit(5),
     ])
 
     const totalRevenue = (paidInvoicesResult.data || []).reduce((s: number, inv: any) => 
@@ -71,11 +80,15 @@ export async function GET() {
         recentActivity: (recentActivityResult.data || []).map((log: any) => ({
           id: log.id,
           type: log.type,
-          title: log.title,
-          description: log.description,
-          timestamp: log.created_at,
+          title: log.title || log.msg || 'Activity Recorded',
+          description: log.description || log.details || null,
+          timestamp: log.created_at || log.time || log.timestamp,
         })),
-        criticalAlerts: [],
+        criticalAlerts: (criticalAlertsResult.data || []).map((alert: any) => ({
+          id: alert.id,
+          severity: 'warning',
+          message: `Pending item: ${alert.doc_number || alert.invoice_number || alert.id}`,
+        })),
       }
     })
   } catch (error: any) {

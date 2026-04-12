@@ -32,39 +32,39 @@ export function RecentActivity() {
   const { data, isLoading } = useDashboard()
 
   return (
-    <Card className="h-full bg-white/5 border-white/10">
-      <CardHeader className="pb-3 border-b border-white/5">
+    <Card className="h-full bg-[#1a1a1a] border-[#2a2a2a] shadow-2xl overflow-hidden group">
+      <CardHeader className="pb-3 border-b border-[#2a2a2a] bg-[#1a1a1a]/50">
         <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-          <Activity className="w-4 h-4 text-neutral-400" />
+          <Activity className="w-4 h-4 text-[#C9A84C]" />
           Recent Activity
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         {isLoading ? (
           <div className="space-y-3">
-            {[1,2,3].map(i => <div key={i} className="h-12 bg-white/5 animate-pulse rounded-xl" />)}
+            {[1,2,3].map(i => <div key={i} className="h-12 bg-[#222222] animate-pulse rounded-xl" />)}
           </div>
         ) : !data?.recentActivity?.length ? (
-          <div className="py-8 text-center text-neutral-500 text-sm italic">
-            No recent activity. Start by creating an event or adding a client.
+          <div className="py-8 text-center text-gray-500 text-sm italic">
+            No recent activity recorded.
           </div>
         ) : (
           <div className="space-y-3">
             {data.recentActivity.map((log) => {
               const Icon = TYPE_ICONS[log.type] || Activity
-              const colorClass = TYPE_COLORS[log.type] || 'text-neutral-400 bg-white/5'
+              const colorClass = TYPE_COLORS[log.type] || 'text-gray-400 bg-[#222222]'
               return (
-                <div key={log.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-white/[0.03] transition-colors">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
+                <div key={log.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#222222] transition-colors group">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${colorClass}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{log.title}</p>
+                    <p className="text-sm font-bold text-gray-100 group-hover:text-[#C9A84C] transition-colors truncate">{log.title}</p>
                     {log.description && (
-                      <p className="text-xs text-neutral-500 mt-0.5 truncate">{log.description}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">{log.description}</p>
                     )}
                   </div>
-                  <span className="text-[10px] text-neutral-600 shrink-0 mt-0.5">{timeAgo(log.timestamp)}</span>
+                  <span className="text-[10px] text-gray-600 font-medium shrink-0 mt-0.5">{timeAgo(log.timestamp)}</span>
                 </div>
               )
             })}
