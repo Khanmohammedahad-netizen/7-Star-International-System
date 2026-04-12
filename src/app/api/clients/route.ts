@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
-const CLIENT_COLUMNS = 'id, name, email, phone, company, country, notes, created_at'
+const CLIENT_COLUMNS = '*'
 
 export async function GET(req: Request) {
   try {

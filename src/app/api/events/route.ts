@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/db/supabase-server'
 import { getSession } from '@/lib/auth/session'
 
 // Select columns that actually exist in the DB schema
-const EVENT_COLUMNS = 'id, title, event_date, end_date, location, status, client_id, type, venue_name, expected_guests, budget_total, color, notes, created_at'
+const EVENT_COLUMNS = '*'
 
 function mapEventFromDB(e: any) {
   return {

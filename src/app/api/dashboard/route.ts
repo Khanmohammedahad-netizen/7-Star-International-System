@@ -35,7 +35,7 @@ export async function GET() {
       // Upcoming events (next 5 from today)
       supabase
         .from('events')
-        .select('id, title, event_date, end_date, location, status, venue_name, color')
+        .select('*')
         .eq('org_id', session.organizationId)
         .gte('event_date', today)
         .order('event_date', { ascending: true })
