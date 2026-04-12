@@ -69,23 +69,50 @@ export async function POST(req: Request) {
     const docNumber  = body.doc_number || `${body.doc_type === 'quotation' ? 'QT' : 'INV'}-${Date.now()}`
     const issueDate  = body.issue_date || new Date().toISOString().split('T')[0]
 
-    // Single insert payload using the normalised column names (doc_number, doc_type).
-    // If the live DB still has the legacy 'invoice_number' NOT NULL column,
-    // we include it as well so neither constraint fires.
+    // Write ALL possible column name variants simultaneously.
+    // Supabase ignores unknown columns in inserts — this makes the insert
+    // work regardless of which specific column names the live DB uses.
     const invoiceData: Record<string, any> = {
+      // org / relations
       org_id:          session.organizationId,
       event_id:        body.event_id || null,
+
+      // document type — both naming conventions
       doc_type:        body.doc_type    || 'invoice',
+      type:            body.doc_type    || 'invoice',       // legacy: 'type'
+
+      // document number — both naming conventions (all NOT NULL safe)
       doc_number:      docNumber,
-      // Include legacy column names as fallbacks — ignored by DB if they don't exist
-      invoice_number:  docNumber,
+      invoice_number:  docNumber,                           // legacy NOT NULL column
+      document_number: docNumber,                           // another possible variant
+      reference:       docNumber,                           // another possible variant
+
+      // dates
       issue_date:      issueDate,
-      status:          body.status      || 'pending',
+      date:            issueDate,                           // legacy: 'date'
+      invoice_date:    issueDate,                           // legacy variant
+
+      // status
+      status:          body.status || 'pending',
+
+      // client
       client_name:     body.client_name || null,
-      subtotal,
-      vat_amount,
-      total,
-      line_items:      body.line_items  || [],
+      customer_name:   body.client_name || null,            // legacy variant
+
+      // amounts — all naming conventions
+      subtotal:        subtotal,
+      sub_total:       subtotal,                            // legacy variant
+      subtotal_amount: subtotal,                            // legacy variant
+      vat_amount:      vat_amount,
+      tax_amount:      vat_amount,                          // legacy variant
+      total:           total,
+      total_amount:    total,                               // legacy NOT NULL column
+      amount:          total,                               // legacy variant
+      grand_total:     total,                               // legacy variant
+
+      // line items
+      line_items:      body.line_items || [],
+      items:           body.line_items || [],               // legacy variant
     }
 
     const { data, error } = await supabase

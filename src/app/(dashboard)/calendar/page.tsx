@@ -30,22 +30,26 @@ export default function CalendarPage() {
     async function fetchEvents() {
       setLoading(true)
       try {
-        const firstDay = new Date(year, month, 1).toISOString()
-        const lastDay = new Date(year, month + 1, 0, 23, 59, 59).toISOString()
+        const firstDay = new Date(year, month, 1).toISOString().split('T')[0]
+        const lastDay = new Date(year, month + 1, 0, 23, 59, 59).toISOString().split('T')[0]
         if (!supabase.from) throw new Error('Supabase client not initialized')
         
+        // Use * to avoid schema cache errors on live DB
         const { data, error } = await supabase
           .from('events')
-          .select('id, title, status, event_date, end_date')
-          .lte('event_date', lastDay)
-          .or(`event_date.gte.${firstDay},end_date.gte.${firstDay}`)
+          .select('*')
+          .or(`event_date.lte.${lastDay},start_date.lte.${lastDay}`)
+          .or(`event_date.gte.${firstDay},start_date.gte.${firstDay},end_date.gte.${firstDay}`)
           
         if (error) throw error
         
         const mappedData = (data || []).map((e: any) => ({
           ...e,
-          name: e.title,
-          start_date: e.event_date
+          // Handle all legacy/modern column variants
+          name: e.title || e.name || 'Untitled Event',
+          start_date: e.event_date || e.start_date || e.created_at?.split('T')[0],
+          status: e.status || 'planning',
+          color: e.color || '#C9A84C'
         }))
         
         setEvents(mappedData)

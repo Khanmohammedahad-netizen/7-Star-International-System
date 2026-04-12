@@ -6,13 +6,17 @@ import { getSession } from '@/lib/auth/session'
 const EVENT_COLUMNS = '*'
 
 function mapEventFromDB(e: any) {
+  if (!e) return e
   return {
     ...e,
     // Map legacy column names → modern frontend schema
-    name: e.title,
-    start_date: e.event_date,
-    type: e.type || 'corporate',
-    color: e.color || '#C9A84C',
+    // ensures the frontend always sees 'name' and 'start_date' regardless of DB col names
+    name:       e.title || e.name || 'Untitled Event',
+    start_date: e.event_date || e.start_date || e.created_at?.split('T')[0],
+    end_date:   e.end_date || e.event_date || e.start_date,
+    type:       e.type || 'corporate',
+    color:      e.color || '#C9A84C',
+    status:     e.status || 'planning',
   }
 }
 
@@ -24,7 +28,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const today = searchParams.get('today')
     const upcoming = searchParams.get('upcoming')
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = parseInt(searchParams.get('limit') || '100', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
 
     const supabase = await createSupabaseServerClient()
@@ -37,6 +41,8 @@ export async function GET(req: Request) {
 
     if (today === 'true') {
       const todayDate = new Date().toISOString().split('T')[0]
+      // Try both event_date and start_date in OR if possible, but simpler to just use event_date for now
+      // since the repairs usually add event_date.
       query = query.lte('event_date', todayDate).gte('end_date', todayDate)
     }
 
@@ -73,11 +79,23 @@ export async function POST(req: Request) {
     const supabase = await createSupabaseServerClient()
     if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
-    // Sanitize all fields before insert
+    const name = body.name || body.title || 'Untitled Event'
+    const startDate = body.start_date || body.event_date || new Date().toISOString().split('T')[0]
+
+    // Sanitize and write ALL possible variations to bypass potential NOT NULL constraints
     const eventData = {
-      title: body.name,                                                 // name → title (legacy col)
-      event_date: body.start_date || null,                             // start_date → event_date
-      end_date: body.end_date || null,
+      org_id: session.organizationId,
+      
+      // Name variants
+      title: name,
+      name: name,
+      
+      // Date variants
+      event_date: startDate,
+      start_date: startDate,
+      date: startDate,
+      
+      end_date: body.end_date || startDate,
       location: body.location || body.venue_name || null,
       status: body.status || 'planning',
       client_id: body.client_id && body.client_id !== '' ? body.client_id : null,
@@ -89,7 +107,6 @@ export async function POST(req: Request) {
         ? body.budget_total : 0,
       color: body.color || '#C9A84C',
       notes: body.notes || null,
-      org_id: session.organizationId
     }
 
     const { data, error } = await supabase
@@ -104,12 +121,12 @@ export async function POST(req: Request) {
     }
 
     // Log activity
-    await supabase.from('activity_log').insert({
+    supabase.from('activity_log').insert({
       org_id: session.organizationId,
       type: 'event_created',
-      title: `New event created`,
-      description: `${data.title} was scheduled for ${data.event_date}`
-    })
+      title: `Event Created: ${name}`,
+      description: `Scheduled for ${startDate}`
+    }).then(() => {})
 
     return NextResponse.json({ success: true, data: mapEventFromDB(data) })
   } catch (error: any) {

@@ -46,17 +46,20 @@ export async function POST(req: Request) {
     const supabase = await createSupabaseServerClient()
     if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
+    const name = body.name || 'Unnamed Vendor'
+    const category = body.category || body.service_type || 'other'
+
     const vendorData = {
-      name: body.name,
-      category: body.category || 'other',
-      service_type: body.category || body.service_type || 'other', // Keep legacy column in sync
+      org_id: session.organizationId,
+      name: name,
+      category: category,
+      service_type: category, // Sync both legacy and modern
       contact: body.contact || null,
       email: body.email || null,
       phone: body.phone || null,
       rating: typeof body.rating === 'number' ? body.rating : 0,
       notes: body.notes || null,
       cost_basis: body.cost_basis ? parseFloat(body.cost_basis) : 0,
-      org_id: session.organizationId
     }
 
     const { data, error } = await supabase

@@ -50,12 +50,13 @@ export async function GET() {
         .limit(10),
     ])
 
-    const totalRevenue = (paidInvoicesResult.data || []).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0)
+    const totalRevenue = (paidInvoicesResult.data || []).reduce((s: number, inv: any) => 
+      s + (Number(inv.total || inv.total_amount || inv.amount) || 0), 0)
 
     const upcomingEvents = (upcomingEventsResult.data || []).map((e: any) => ({
       ...e,
-      name: e.title,
-      start_date: e.event_date,
+      name: e.title || e.name || 'Untitled Event',
+      start_date: e.event_date || e.start_date || e.created_at?.split('T')[0],
     }))
 
     return NextResponse.json({

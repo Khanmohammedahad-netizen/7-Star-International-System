@@ -40,14 +40,20 @@ export async function POST(req: Request) {
     const supabase = await createSupabaseServerClient()
     if (!supabase) return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
 
+    const name = body.name || body.client_name || 'Unnamed Client'
+    const company = body.company || body.client_company || null
+
     const clientData = {
-      name: body.name,
+      org_id: session.organizationId,
+      name: name,
       email: body.email || null,
       phone: body.phone || null,
-      company: body.company || null,
+      company: company,
       country: body.country || 'UAE',
       notes: body.notes || null,
-      org_id: session.organizationId
+      // Variants
+      client_name: name,
+      client_company: company,
     }
 
     const { data, error } = await supabase
