@@ -38,10 +38,10 @@ export async function GET() {
         .select('amount')
         .eq('org_id', session.organizationId),
 
-      // Recent invoices (last 10)
+      // Recent invoices (last 10) — use * to avoid schema mismatch on named columns
       supabase
         .from('invoices')
-        .select('id, doc_number, doc_type, client_name, total, status, issue_date, created_at')
+        .select('*')
         .eq('org_id', session.organizationId)
         .order('created_at', { ascending: false })
         .limit(10),
@@ -49,27 +49,29 @@ export async function GET() {
       // Recent expenses (last 10)
       supabase
         .from('expenses')
-        .select('id, description, category, amount, expense_date, event_id, created_at')
+        .select('*')
         .eq('org_id', session.organizationId)
         .order('created_at', { ascending: false })
         .limit(10),
     ])
 
-    const total_revenue = (invoicePaidResult.data || []).reduce((s: number, r: any) => s + (Number(r.total) || 0), 0)
+    const total_revenue    = (invoicePaidResult.data    || []).reduce((s: number, r: any) => s + (Number(r.total) || 0), 0)
     const pending_payments = (invoicePendingResult.data || []).reduce((s: number, r: any) => s + (Number(r.total) || 0), 0)
-    const total_expenses = (expensesResult.data || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0)
+    const total_expenses   = (expensesResult.data       || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0)
     const net_profit = total_revenue - total_expenses
+
+    // Normalize invoice rows: handle both legacy (invoice_number) and new (doc_number) schemas
+    const normalizeInvoice = (row: any) => ({
+      ...row,
+      doc_number: row.doc_number ?? row.invoice_number ?? '',
+      doc_type:   row.doc_type   ?? row.type           ?? 'invoice',
+    })
 
     return NextResponse.json({
       success: true,
       data: {
-        summary: {
-          total_revenue,
-          pending_payments,
-          total_expenses,
-          net_profit,
-        },
-        recent_invoices: recentInvoicesResult.data || [],
+        summary: { total_revenue, pending_payments, total_expenses, net_profit },
+        recent_invoices: (recentInvoicesResult.data || []).map(normalizeInvoice),
         recent_expenses: recentExpensesResult.data || [],
       }
     })

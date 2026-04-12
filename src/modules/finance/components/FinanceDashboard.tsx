@@ -123,7 +123,7 @@ export function FinanceDashboard() {
                             <tbody className="text-sm">
                                 {financeData?.recent_invoices?.map((inv: any) => (
                                     <tr key={inv.id} className="border-b border-[#2a2a2a] hover:bg-[#111111] transition-colors group">
-                                        <td className="py-4 font-mono text-xs text-gray-400">{inv.id.split('-')[0]}</td>
+                                        <td className="py-4 font-mono text-xs text-gray-400">{(inv.doc_number || inv.invoice_number || inv.id?.split('-')[0] || '—')}</td>
                                         <td className="py-4 font-bold text-white">AED {fmt(inv.total)}</td>
                                         <td className="py-4">
                                             <Badge variant={inv.status === 'paid' ? 'success' : 'secondary'} className="capitalize text-[10px]">
